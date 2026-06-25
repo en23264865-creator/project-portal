@@ -30,8 +30,13 @@ def create_app():
     app.register_blueprint(comments_bp,    url_prefix='/comments')
     app.register_blueprint(export_bp,      url_prefix='/export')
 
-    with app.app_context():
-        db.create_all()
+   with app.app_context():
+    db.create_all()
+    # Auto-seed if database is empty
+    from models import User
+    if User.query.count() == 0:
+        from seed import seed
+        seed()
 
     @app.route('/')
     def index():
