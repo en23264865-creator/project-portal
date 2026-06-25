@@ -1,7 +1,6 @@
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 from config import Config
 from models import db, bcrypt, jwt
 
@@ -30,13 +29,17 @@ def create_app():
     app.register_blueprint(comments_bp,    url_prefix='/comments')
     app.register_blueprint(export_bp,      url_prefix='/export')
 
-   with app.app_context():
-    db.create_all()
-    # Auto-seed if database is empty
-    from models import User
-    if User.query.count() == 0:
-        from seed import seed
-        seed()
+    with app.app_context():
+        db.create_all()
+        # Auto-seed if database is empty (handles Render free tier — no shell access)
+        try:
+            from models import User
+            if User.query.count() == 0:
+                print('🌱 Empty database detected — running auto-seed...')
+                from seed import seed
+                seed()
+        except Exception as e:
+            print(f'⚠️  Auto-seed skipped: {e}')
 
     @app.route('/')
     def index():
