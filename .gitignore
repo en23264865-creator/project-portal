@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+*.db
+*.sqlite3
+uploads/
+students.xlsx
+projects.xlsx
+serviceAccountKey.json
+.DS_Store
