@@ -31,7 +31,6 @@ class User(db.Model):
     exam_sem      = db.Column(db.Integer, nullable=True)    # e.g. 6
     exam_year     = db.Column(db.Integer, nullable=True)    # e.g. 2026
 
-    firebase_uid  = db.Column(db.String(200), nullable=True, unique=True)
 
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
 

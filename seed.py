@@ -11,43 +11,46 @@ DOMAINS = [
 
 # ── guide domain assignments ──────────────────────────────────────────────────
 GUIDE_DATA = [
-    dict(
-        name='Kranti Gajmal',
-        email='kranti.gajmal@college.com',
-        password='Guide@123',
-        domains=['AI/ML', 'Data Science', 'IoT'],
-    ),
-    dict(
-        name='Shradha Jadhav',
-        email='shradha.jadhav@college.com',
-        password='Guide@123',
-        domains=['Web Development', 'Mobile Development', 'Cloud Computing'],
-    ),
-    dict(
-        name='Diksha Rane',
-        email='diksha.rane@college.com',
-        password='Guide@123',
-        domains=['Cybersecurity', 'Blockchain', 'IoT'],
-    ),
+    {
+        'name': 'Kranti Gajmal',
+        'email': 'kranti.gajmal@college.com',
+        'contact': '9876543201',
+        'password': 'Guide@123',
+        'domains': ['AI/ML', 'Data Science', 'IoT']
+    },
+    {
+        'name': 'Shradha Jadhav',
+        'email': 'shradha.jadhav@college.com',
+        'contact': '9876543202',
+        'password': 'Guide@123',
+        'domains': ['Web Development', 'Mobile Development', 'Cloud Computing']
+    },
+    {
+        'name': 'Diksha Rane',
+        'email': 'diksha.rane@college.com',
+        'contact': '9876543203',
+        'password': 'Guide@123',
+        'domains': ['Cybersecurity', 'Blockchain', 'IoT']
+    }
 ]
 
 # ── students ──────────────────────────────────────────────────────────────────
 STUDENT_DATA = [
-    ('Aarav Sharma',    'aarav.sharma@college.com'),
-    ('Priya Patil',     'priya.patil@college.com'),
-    ('Rohan Mehta',     'rohan.mehta@college.com'),
-    ('Sneha Kulkarni',  'sneha.kulkarni@college.com'),
-    ('Arjun Desai',     'arjun.desai@college.com'),
-    ('Pooja Nair',      'pooja.nair@college.com'),
-    ('Vikram Joshi',    'vikram.joshi@college.com'),
-    ('Ananya Singh',    'ananya.singh@college.com'),
-    ('Rahul Gupta',     'rahul.gupta@college.com'),
-    ('Nisha Reddy',     'nisha.reddy@college.com'),
-    ('Aditya More',     'aditya.more@college.com'),
-    ('Kavya Pillai',    'kavya.pillai@college.com'),
-    ('Siddharth Rao',   'siddharth.rao@college.com'),
-    ('Meera Iyer',      'meera.iyer@college.com'),
-    ('Karan Verma',     'karan.verma@college.com'),
+    ('Aarav Sharma', 'aarav.sharma@college.com', '9876543210'),
+    ('Priya Patil', 'priya.patil@college.com', '9876543211'),
+    ('Rohan Mehta', 'rohan.mehta@college.com', '9876543212'),
+    ('Sneha Kulkarni', 'sneha.kulkarni@college.com', '9876543213'),
+    ('Arjun Desai', 'arjun.desai@college.com', '9876543214'),
+    ('Pooja Nair', 'pooja.nair@college.com', '9876543215'),
+    ('Vikram Joshi', 'vikram.joshi@college.com', '9876543216'),
+    ('Ananya Singh', 'ananya.singh@college.com', '9876543217'),
+    ('Rahul Gupta', 'rahul.gupta@college.com', '9876543218'),
+    ('Nisha Reddy', 'nisha.reddy@college.com', '9876543219'),
+    ('Aditya More', 'aditya.more@college.com', '9876543220'),
+    ('Kavya Pillai', 'kavya.pillai@college.com', '9876543221'),
+    ('Siddharth Rao', 'siddharth.rao@college.com', '9876543222'),
+    ('Meera Iyer', 'meera.iyer@college.com', '9876543223'),
+    ('Karan Verma', 'karan.verma@college.com', '9876543224')
 ]
 
 # ── projects ──────────────────────────────────────────────────────────────────
@@ -187,9 +190,13 @@ PROGRESS_UPDATES = [
 def seed():
     from models import db, bcrypt, User, Project, Progress, Evaluation, Comment
 
-    db.drop_all()
     db.create_all()
-    print('📋 Tables created.')
+
+    if User.query.first():
+        print("✅ Database already seeded. Skipping.")
+    return
+
+    print("📋 Seeding database...")
 
     # ── Step 1: Create Guides ─────────────────────────────────────────────────
     guide_objects = []
@@ -197,6 +204,7 @@ def seed():
         user = User(
             name     = g['name'],
             email    = g['email'],
+            contact  = g['contact'],
             password = bcrypt.generate_password_hash(g['password']).decode('utf-8'),
             role     = 'Guide',
             domain1  = g['domains'][0],
@@ -219,6 +227,7 @@ def seed():
     hod = User(
         name     = 'Dr. HoD',
         email    = 'hod@college.com',
+        contact  = '9876543204',
         password = bcrypt.generate_password_hash('Hod@123').decode('utf-8'),
         role     = 'HoD',
     )
@@ -228,15 +237,16 @@ def seed():
 
     # ── Step 4: Create External Examiners ────────────────────────────────────
     examiners_raw = [
-        ('Nitin Mohite',    'nitin.mohite@exam.com',    'Exam@123', 6, 2026),
-        ('Manali Khedekar', 'manali.khedekar@exam.com', 'Exam@123', 6, 2026),
-        ('Jyoti Khalkar',   'jyoti.khalkar@exam.com',   'Exam@123', 6, 2026),
-    ]
+        ('Nitin Mohite', 'nitin.mohite@exam.com', '9876543205', 'Exam@123', 6, 2026),
+        ('Manali Khedekar', 'manali.khedekar@exam.com', '9876543206', 'Exam@123', 6, 2026),
+        ('Jyoti Khalkar', 'jyoti.khalkar@exam.com', '9876543207', 'Exam@123', 6, 2026),
+        ]
     examiner_objects = []
-    for name, email, pwd, sem, year in examiners_raw:
+    for name, email, contact, pwd, sem, year in examiners_raw:
         u = User(
             name      = name,
             email     = email,
+            contact   = contact,
             password  = bcrypt.generate_password_hash(pwd).decode('utf-8'),
             role      = 'External Examiner',
             exam_sem  = sem,
@@ -249,10 +259,11 @@ def seed():
 
     # ── Step 5: Create Students ───────────────────────────────────────────────
     student_objects = []
-    for name, email in STUDENT_DATA:
+    for name, contact, email in STUDENT_DATA:
         u = User(
             name     = name,
             email    = email,
+            contact  = contact,
             password = bcrypt.generate_password_hash('Student@123').decode('utf-8'),
             role     = 'Student',
         )
@@ -377,7 +388,7 @@ def seed():
     print('\n📋 LOGIN CREDENTIALS')
     print('-'*55)
     print('STUDENTS (password: Student@123)')
-    for name, email in STUDENT_DATA:
+    for name, email, contact in STUDENT_DATA:
         print(f'  {email}')
     print('\nGUIDES (password: Guide@123)')
     for g in GUIDE_DATA:
@@ -385,7 +396,7 @@ def seed():
     print('\nHOD')
     print('  hod@college.com  /  Hod@123')
     print('\nEXTERNAL EXAMINERS (password: Exam@123)')
-    for _, email, _, _, _ in examiners_raw:
+    for _, email, _, _, _, _ in examiners_raw:
         print(f'  {email}')
     print('='*55)
 

@@ -49,7 +49,11 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    #run_seed(app)
+        from models import User
+
+        if User.query.count() == 0:
+            from seed import seed
+            seed()
 
     @app.route('/')
     def index():
