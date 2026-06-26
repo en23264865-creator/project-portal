@@ -49,7 +49,7 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    run_seed(app)
+    #run_seed(app)
 
     @app.route('/')
     def index():
