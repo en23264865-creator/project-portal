@@ -33,28 +33,25 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+
         from models import User, Project, Comment
+
         print("================================")
         print("Users before seed:", User.query.count())
         print("Projects before seed:", Project.query.count())
         print("Comments before seed:", Comment.query.count())
         print("================================")
 
-    try:
-        from seed import seed
-        print("🌱 Calling seed()...")
-        seed()
-        print("✅ seed() finished")
-    except Exception as e:
-        print("❌ SEED ERROR:", e)
-        import traceback
-        traceback.print_exc()
+        if Project.query.count() == 0:
+            print("🌱 Calling seed()...")
+            from seed import seed
+            seed()
 
-    print("================================")
-    print("Users after seed:", User.query.count())
-    print("Projects after seed:", Project.query.count())
-    print("Comments after seed:", Comment.query.count())
-    print("================================")
+        print("================================")
+        print("Users after seed:", User.query.count())
+        print("Projects after seed:", Project.query.count())
+        print("Comments after seed:", Comment.query.count())
+        print("================================")
 
     @app.route('/')
     def index():

@@ -189,16 +189,6 @@ PROGRESS_UPDATES = [
 
 def seed():
     from models import db, bcrypt, User, Project, Progress, Evaluation, Comment
-    with app.app_context():
-        try:
-            print("🌱 Running seed...")
-            import seed as seed_module
-            seed_module.seed()
-        except Exception as e:
-            print(f"❌ Seed failed: {e}")
-            import traceback
-            traceback.print_exc()
-    db.create_all()
 
     print("📋 Seeding database...")
 
