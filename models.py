@@ -18,7 +18,8 @@ class User(db.Model):
     email         = db.Column(db.String(100), unique=True, nullable=False)
     password      = db.Column(db.String(255), nullable=False)
     role          = db.Column(db.String(50), nullable=False)
-    contact = db.Column(db.String(10), nullable=False)
+    contact       = db.Column(db.String(10), nullable=True)
+    firebase_uid  = db.Column(db.String(255), unique=True, nullable=True)
     # roles: Student | Guide | HoD | External Examiner
 
     # Guide-specific: up to 3 domains
