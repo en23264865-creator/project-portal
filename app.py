@@ -5,18 +5,6 @@ from config import Config
 from models import db, bcrypt, jwt
 
 
-def run_seed(app):
-    with app.app_context():
-        try:
-            from models import User
-            print('🌱 Empty database — seeding now...')
-            import seed as seed_module
-            seed_module.seed()
-        except Exception as e:
-            print(f'❌ Seed failed: {e}')
-            import traceback
-            traceback.print_exc()
-
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -45,10 +33,28 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        from models import User, Project, Comment
+        print("================================")
+        print("Users before seed:", User.query.count())
+        print("Projects before seed:", Project.query.count())
+        print("Comments before seed:", Comment.query.count())
+        print("================================")
 
-        from models import User
+    try:
+        from seed import seed
+        print("🌱 Calling seed()...")
+        seed()
+        print("✅ seed() finished")
+    except Exception as e:
+        print("❌ SEED ERROR:", e)
+        import traceback
+        traceback.print_exc()
 
-        print("User count =", User.query.count())
+    print("================================")
+    print("Users after seed:", User.query.count())
+    print("Projects after seed:", Project.query.count())
+    print("Comments after seed:", Comment.query.count())
+    print("================================")
 
     @app.route('/')
     def index():
