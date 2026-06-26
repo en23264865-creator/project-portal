@@ -187,7 +187,7 @@ PROGRESS_UPDATES = [
 ]
 
 
-def seed(app):
+def seed():
     from models import db, bcrypt, User, Project, Progress, Evaluation, Comment
     with app.app_context():
         try:
@@ -428,7 +428,7 @@ if __name__ == '__main__':
             from seed import seed
             seed()
 
-            print("================================")
-            print("Users:", User.query.count())
-            print("Projects:", Project.query.count())
-            print("================================")
+        print("================================")
+        print("Users:", User.query.count())
+        print("Projects:", Project.query.count())
+        print("================================")
