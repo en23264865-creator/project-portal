@@ -423,7 +423,7 @@ if __name__ == '__main__':
         seed()
 
         from models import User, Project
-            if Project.query.count() == 0:
+        if Project.query.count() == 0:
                 print("🌱 Running seed...")
                 from seed import seed
                 seed()
