@@ -9,9 +9,6 @@ def run_seed(app):
     with app.app_context():
         try:
             from models import User
-            if User.query.count() > 0:
-                print('✅ Database already has data — skipping seed.')
-                return
             print('🌱 Empty database — seeding now...')
             import seed as seed_module
             seed_module.seed()
@@ -51,9 +48,7 @@ def create_app():
 
         from models import User
 
-        if User.query.count() == 0:
-            from seed import seed
-            seed()
+        print("User count =", User.query.count())
 
     @app.route('/')
     def index():

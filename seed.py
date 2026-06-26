@@ -187,14 +187,18 @@ PROGRESS_UPDATES = [
 ]
 
 
-def seed():
+def run_seed(app):
     from models import db, bcrypt, User, Project, Progress, Evaluation, Comment
-
+    with app.app_context():
+        try:
+            print("🌱 Running seed...")
+            import seed as seed_module
+            seed_module.seed()
+        except Exception as e:
+            print(f"❌ Seed failed: {e}")
+            import traceback
+            traceback.print_exc()
     db.create_all()
-
-    if User.query.first():
-        print("✅ Database already seeded. Skipping.")
-    return
 
     print("📋 Seeding database...")
 
@@ -259,7 +263,7 @@ def seed():
 
     # ── Step 5: Create Students ───────────────────────────────────────────────
     student_objects = []
-    for name, contact, email in STUDENT_DATA:
+    for name, email, contact in STUDENT_DATA:
         u = User(
             name     = name,
             email    = email,
@@ -417,3 +421,10 @@ if __name__ == '__main__':
     with _app.app_context():
         db.create_all()
         seed()
+
+        from models import User, Project
+
+        print("================================")
+        print("Users:", User.query.count())
+        print("Projects:", Project.query.count())
+        print("================================")
