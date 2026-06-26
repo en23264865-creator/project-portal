@@ -712,6 +712,73 @@ tr:hover td { background:var(--surface); }
 .modal-close:hover { color:var(--red); }
 
 /* ═══════════════════════════════════════
+   FIELD VALIDATION
+═══════════════════════════════════════ */
+.field-error {
+  font-size:.72rem; color:var(--red); font-weight:600;
+  margin-top:4px; min-height:16px;
+  display:flex; align-items:center; gap:4px;
+}
+.field-error:not(:empty)::before { content:'⚠ '; }
+.form-control.error  { border-color:var(--red) !important; }
+.form-control.valid  { border-color:var(--green) !important; }
+.req { color:var(--red); }
+
+/* Password strength */
+.pwd-strength-bar {
+  height:4px; border-radius:4px; background:var(--surface-2);
+  margin-top:6px; overflow:hidden;
+}
+.pwd-strength-fill {
+  height:100%; border-radius:4px; width:0%;
+  transition:width .3s, background .3s;
+}
+.pwd-rules {
+  margin-top:8px; display:grid;
+  grid-template-columns:1fr 1fr; gap:3px;
+}
+.rule {
+  font-size:.68rem; color:var(--ink-3); font-weight:500;
+  transition:color .2s;
+}
+.rule.pass { color:var(--green); }
+
+/* Google button */
+.btn-google {
+  width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:10px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--surface-2); background:var(--white);
+  font-size:.84rem; font-weight:600; cursor:pointer;
+  font-family:inherit; color:var(--ink-2);
+  transition:all .15s; margin-top:4px;
+}
+.btn-google:hover { border-color:#4285F4; background:#f8f9ff; }
+
+/* Auth divider */
+.auth-divider {
+  display:flex; align-items:center; gap:10px;
+  margin:16px 0 12px; color:var(--ink-3); font-size:.75rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content:''; flex:1; height:1px; background:var(--surface-2);
+}
+
+/* Google role picker modal */
+.google-role-modal {
+  position:fixed; inset:0; background:rgba(10,10,26,.7);
+  display:none; align-items:center; justify-content:center;
+  z-index:9999; padding:20px;
+}
+.google-role-modal.open { display:flex; }
+.google-role-box {
+  background:#fff; border-radius:var(--radius); padding:28px;
+  max-width:360px; width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.3);
+}
+.google-role-box h3 { font-size:1rem; font-weight:700; margin-bottom:6px; }
+.google-role-box p  { font-size:.8rem; color:var(--ink-3); margin-bottom:16px; }
+
+/* ═══════════════════════════════════════
    MISC
 ═══════════════════════════════════════ */
 .page { display:none; }
@@ -944,53 +1011,118 @@ tr:hover td { background:var(--surface); }
         <button class="auth-tab" onclick="switchAuthTab('register')">✨ Register</button>
       </div>
 
-      <!-- LOGIN -->
+      <!-- ── LOGIN ─────────────────────────────── -->
       <div id="login-form">
         <div class="form-group">
           <label class="form-label">Email Address</label>
-          <input class="form-control" type="email" id="login-email" placeholder="your@email.com"/>
+          <input class="form-control" type="email" id="login-email"
+                 placeholder="your@email.com"
+                 oninput="clearFieldError('login-email')"/>
+          <div class="field-error" id="err-login-email"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Password</label>
-          <input class="form-control" type="password" id="login-password" placeholder="••••••••"/>
+          <div style="position:relative">
+            <input class="form-control" type="password" id="login-password"
+                   placeholder="••••••••" style="padding-right:40px"
+                   oninput="clearFieldError('login-password')"
+                   onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button type="button" onclick="togglePwd('login-password',this)"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--ink-3)">👁</button>
+          </div>
+          <div class="field-error" id="err-login-password"></div>
         </div>
-        <button class="btn btn-primary btn-full mt-16" onclick="doLogin()">🚀 Sign In</button>
-        <p class="text-muted" style="text-align:center;margin-top:14px;font-size:.7rem">
-          Demo credentials — student: <strong>aarav.student1@college.com / Student@123</strong><br/>
-          HoD: <strong>hod@college.com / Hod@123</strong>
-        </p>
+        <button class="btn btn-primary btn-full mt-16" onclick="doLogin()" id="login-btn">
+          🚀 Sign In
+        </button>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <button class="btn-google" onclick="doGoogleLogin()" id="google-btn">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign in with Google
+        </button>
       </div>
 
-      <!-- REGISTER -->
+      <!-- ── REGISTER ───────────────────────────── -->
       <div id="register-form" style="display:none">
+
         <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input class="form-control" id="reg-name" placeholder="Your full name"/>
+          <label class="form-label">Full Name <span class="req">*</span></label>
+          <input class="form-control" id="reg-name"
+                 placeholder="Letters and spaces only"
+                 oninput="liveValidateName(this)"/>
+          <div class="field-error" id="err-reg-name"></div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="form-control" type="email" id="reg-email" placeholder="your@email.com"/>
+          <label class="form-label">Email Address <span class="req">*</span></label>
+          <input class="form-control" type="email" id="reg-email"
+                 placeholder="your@email.com"
+                 oninput="liveValidateEmail(this)"/>
+          <div class="field-error" id="err-reg-email"></div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input class="form-control" type="password" id="reg-password" placeholder="Min 6 characters"/>
+          <label class="form-label">Contact Number <span style="color:var(--ink-3);font-weight:400">(optional)</span></label>
+          <input class="form-control" type="tel" id="reg-contact"
+                 placeholder="10-digit mobile number"
+                 maxlength="10"
+                 oninput="this.value=this.value.replace(/\D/g,'').slice(0,10); liveValidateContact(this)"/>
+          <div class="field-error" id="err-reg-contact"></div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Role</label>
+          <label class="form-label">Password <span class="req">*</span></label>
+          <div style="position:relative">
+            <input class="form-control" type="password" id="reg-password"
+                   placeholder="Min 8 chars, upper, lower, number, symbol"
+                   style="padding-right:40px"
+                   oninput="liveValidatePassword(this)"/>
+            <button type="button" onclick="togglePwd('reg-password',this)"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                           background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--ink-3)">👁</button>
+          </div>
+          <div class="field-error" id="err-reg-password"></div>
+          <!-- Password strength bar -->
+          <div class="pwd-strength-bar" id="pwd-bar" style="display:none">
+            <div class="pwd-strength-fill" id="pwd-fill"></div>
+          </div>
+          <div class="pwd-rules" id="pwd-rules">
+            <div class="rule" id="r-len">✗ At least 8 characters</div>
+            <div class="rule" id="r-upper">✗ One uppercase letter (A-Z)</div>
+            <div class="rule" id="r-lower">✗ One lowercase letter (a-z)</div>
+            <div class="rule" id="r-num">✗ One number (0-9)</div>
+            <div class="rule" id="r-sym">✗ One special character (!@#$%…)</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Role <span class="req">*</span></label>
           <select class="form-control" id="reg-role" onchange="onRoleChange()">
-            <option value="">Select role…</option>
+            <option value="">Select your role…</option>
             <option value="Student">🎓 Student</option>
             <option value="Guide">🧑‍🏫 Guide (Faculty)</option>
             <option value="HoD">🏛️ HoD</option>
             <option value="External Examiner">📝 External Examiner</option>
           </select>
+          <div class="field-error" id="err-reg-role"></div>
         </div>
 
         <!-- Guide domains -->
         <div id="guide-domains" style="display:none">
           <div class="form-group">
-            <label class="form-label">Your Domains <span style="color:var(--red)">*</span> <span class="form-hint" style="display:inline">(pick 2–3)</span></label>
+            <label class="form-label">Your Domains <span class="req">*</span>
+              <span class="form-hint" style="display:inline;margin-left:4px">(pick 2–3)</span>
+            </label>
             <div class="domain-grid" id="domain-chips"></div>
+            <div class="field-error" id="err-domains"></div>
           </div>
         </div>
 
@@ -998,9 +1130,9 @@ tr:hover td { background:var(--surface); }
         <div id="examiner-fields" style="display:none">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Semester</label>
+              <label class="form-label">Semester <span class="req">*</span></label>
               <select class="form-control" id="reg-sem">
-                <option value="">Select sem…</option>
+                <option value="">Select…</option>
                 <option value="1">1st Sem</option><option value="2">2nd Sem</option>
                 <option value="3">3rd Sem</option><option value="4">4th Sem</option>
                 <option value="5">5th Sem</option><option value="6">6th Sem</option>
@@ -1008,13 +1140,24 @@ tr:hover td { background:var(--surface); }
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Batch Year</label>
-              <input class="form-control" type="number" id="reg-year" placeholder="e.g. 2026"/>
+              <label class="form-label">Batch Year <span class="req">*</span></label>
+              <input class="form-control" type="number" id="reg-year" placeholder="e.g. 2026" min="2020" max="2035"/>
             </div>
           </div>
         </div>
 
         <button class="btn btn-primary btn-full mt-16" onclick="doRegister()">✨ Create Account</button>
+
+        <div class="auth-divider"><span>or</span></div>
+        <button class="btn-google" onclick="doGoogleLogin()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign up with Google
+        </button>
       </div>
 
     </div>
@@ -1063,20 +1206,24 @@ tr:hover td { background:var(--surface); }
 <div class="modal-overlay" id="add-project-modal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Submit New Project</span>
+      <span class="modal-title">📁 Submit New Project</span>
       <button class="modal-close" onclick="closeModal('add-project-modal')">✕</button>
     </div>
+
+    <!-- REQUIRED fields -->
     <div class="form-group">
-      <label class="form-label">Project Title</label>
+      <label class="form-label">Project Title <span class="req">*</span></label>
       <input class="form-control" id="np-title" placeholder="e.g. Smart Attendance System"/>
+      <div class="field-error" id="err-np-title"></div>
     </div>
     <div class="form-group">
-      <label class="form-label">Description</label>
-      <textarea class="form-control" id="np-desc" rows="3" placeholder="Brief project description…"></textarea>
+      <label class="form-label">Description <span class="req">*</span></label>
+      <textarea class="form-control" id="np-desc" rows="3" placeholder="What does your project do?"></textarea>
+      <div class="field-error" id="err-np-desc"></div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Domain</label>
+        <label class="form-label">Domain <span class="req">*</span></label>
         <select class="form-control" id="np-domain">
           <option value="">Select domain…</option>
           <option>AI/ML</option><option>IoT</option><option>Cybersecurity</option>
@@ -1084,9 +1231,10 @@ tr:hover td { background:var(--surface); }
           <option>Blockchain</option><option>Cloud Computing</option>
           <option>Mobile Development</option>
         </select>
+        <div class="field-error" id="err-np-domain"></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Project Type</label>
+        <label class="form-label">Project Type <span class="req">*</span></label>
         <select class="form-control" id="np-type">
           <option value="Major">Major</option>
           <option value="Minor">Minor</option>
@@ -1095,40 +1243,50 @@ tr:hover td { background:var(--surface); }
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Semester</label>
+        <label class="form-label">Semester <span class="req">*</span></label>
         <select class="form-control" id="np-sem">
-          <option value="6">6th Sem</option>
-          <option value="8">8th Sem</option>
-          <option value="5">5th Sem</option>
-          <option value="7">7th Sem</option>
+          <option value="6">6th Sem</option><option value="8">8th Sem</option>
+          <option value="5">5th Sem</option><option value="7">7th Sem</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Batch Year</label>
+        <label class="form-label">Batch Year <span class="req">*</span></label>
         <input class="form-control" type="number" id="np-year" value="2026"/>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Group Members (comma-separated)</label>
-      <input class="form-control" id="np-members" placeholder="Your Name, Member 2, Member 3"/>
+      <label class="form-label">Group Members <span class="req">*</span></label>
+      <input class="form-control" id="np-members" placeholder="Your Name, Member 2, Member 3 (comma separated)"/>
+      <div class="field-error" id="err-np-members"></div>
+    </div>
+
+    <!-- OPTIONAL links -->
+    <div style="margin:16px 0 10px;display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:1px;background:var(--surface-2)"></div>
+      <span style="font-size:.72rem;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.5px">
+        Links — Optional, can be added later
+      </span>
+      <div style="flex:1;height:1px;background:var(--surface-2)"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">GitHub Repository</label>
+      <input class="form-control" id="np-github" placeholder="https://github.com/…  (optional)"/>
     </div>
     <div class="form-group">
-      <label class="form-label">GitHub Link</label>
-      <input class="form-control" id="np-github" placeholder="https://github.com/…"/>
+      <label class="form-label">Demo Video (Drive / YouTube link)</label>
+      <input class="form-control" id="np-demo" placeholder="https://drive.google.com/…  (optional)"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Demo Video (Drive link)</label>
-      <input class="form-control" id="np-demo" placeholder="https://drive.google.com/…"/>
+      <label class="form-label">Project Report (Drive link)</label>
+      <input class="form-control" id="np-report" placeholder="https://drive.google.com/…  (optional)"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Report (Drive link)</label>
-      <input class="form-control" id="np-report" placeholder="https://drive.google.com/…"/>
+      <label class="form-label">Code / Document (Drive link)</label>
+      <input class="form-control" id="np-code" placeholder="https://drive.google.com/…  (optional)"/>
     </div>
-    <div class="form-group">
-      <label class="form-label">Code Document (Drive link)</label>
-      <input class="form-control" id="np-code" placeholder="https://drive.google.com/…"/>
-    </div>
-    <button class="btn btn-primary btn-full mt-16" onclick="submitProject()">Submit Project</button>
+
+    <button class="btn btn-primary btn-full mt-16" onclick="submitProject()">🚀 Submit Project</button>
   </div>
 </div>
 
@@ -1209,76 +1367,256 @@ async function api(method, url, body=null) {
    AUTH
 ═══════════════════════════════════════ */
 function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login')||(i===1 && tab==='register')));
+  document.querySelectorAll('.auth-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
   document.getElementById('login-form').style.display    = tab==='login'    ? '' : 'none';
   document.getElementById('register-form').style.display = tab==='register' ? '' : 'none';
 }
 
-function buildDomainChips() {
-  const domains = ['AI/ML','IoT','Cybersecurity','Web Development','Data Science','Blockchain','Cloud Computing','Mobile Development'];
-  const el = document.getElementById('domain-chips');
-  el.innerHTML = domains.map(d => `
-    <label class="domain-chip" id="chip-${d.replace(/\W/g,'_')}" onclick="toggleDomain(this,'${d}')">
-      <input type="checkbox" value="${d}"/> ${d}
-    </label>
-  `).join('');
+/* ── field error helpers ── */
+function setFieldError(id, msg) {
+  const el = document.getElementById('err-' + id);
+  if (el) el.textContent = msg;
+  const inp = document.getElementById(id);
+  if (inp) { inp.classList.toggle('error', !!msg); inp.classList.toggle('valid', !msg && inp.value); }
+}
+function clearFieldError(id) { setFieldError(id, ''); }
+
+/* ── live validators ── */
+function liveValidateName(inp) {
+  const v = inp.value;
+  if (!v) { setFieldError('reg-name', ''); return; }
+  if (/[^A-Za-z\s\.]/.test(v))
+    setFieldError('reg-name', 'Only letters, spaces and dots allowed — no numbers or symbols');
+  else if (v.trim().length < 2)
+    setFieldError('reg-name', 'Name must be at least 2 characters');
+  else
+    setFieldError('reg-name', '');
 }
 
+function liveValidateEmail(inp) {
+  const v = inp.value.trim();
+  if (!v) { setFieldError('reg-email', ''); return; }
+  if (!v.includes('@'))
+    setFieldError('reg-email', 'Email must contain @');
+  else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))
+    setFieldError('reg-email', 'Enter a valid email address');
+  else
+    setFieldError('reg-email', '');
+}
+
+function liveValidateContact(inp) {
+  const v = inp.value.replace(/\D/g,'');
+  if (!v) { setFieldError('reg-contact', ''); return; }
+  if (v.length !== 10)
+    setFieldError('reg-contact', `${v.length}/10 digits — must be exactly 10`);
+  else
+    setFieldError('reg-contact', '');
+}
+
+function liveValidatePassword(inp) {
+  const v = inp.value;
+  const bar  = document.getElementById('pwd-bar');
+  const fill = document.getElementById('pwd-fill');
+  if (!v) { bar.style.display='none'; setFieldError('reg-password',''); updateRules(v); return; }
+  bar.style.display = '';
+  updateRules(v);
+  // score
+  let score = 0;
+  if (v.length >= 8)             score++;
+  if (/[A-Z]/.test(v))          score++;
+  if (/[a-z]/.test(v))          score++;
+  if (/\d/.test(v))             score++;
+  if (/[!@#$%^&*()\-_=+\[\]{}|;:'",.<>?\/`~\\]/.test(v)) score++;
+  const pct   = (score / 5) * 100;
+  const color = score <= 1 ? '#ef4444' : score <= 3 ? '#f59e0b' : '#22c55e';
+  fill.style.width      = pct + '%';
+  fill.style.background = color;
+  if (score < 5) setFieldError('reg-password','');  // rules show the detail
+  else           setFieldError('reg-password','');
+}
+
+function updateRules(v) {
+  const rules = [
+    ['r-len',   v.length >= 8,                                             '8+ characters'],
+    ['r-upper', /[A-Z]/.test(v),                                           'One uppercase (A-Z)'],
+    ['r-lower', /[a-z]/.test(v),                                           'One lowercase (a-z)'],
+    ['r-num',   /\d/.test(v),                                              'One number (0-9)'],
+    ['r-sym',   /[!@#$%^&*()\-_=+\[\]{}|;:'",.<>?\/`~\\]/.test(v),       'One special char'],
+  ];
+  rules.forEach(([id, ok, label]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = (ok ? '✓ ' : '✗ ') + label;
+    el.classList.toggle('pass', ok);
+  });
+}
+
+/* ── frontend validation before submit ── */
+function frontendValidateName(val) {
+  if (!val || !val.trim()) return 'Name is required';
+  if (val.trim().length < 2) return 'Name must be at least 2 characters';
+  if (/[^A-Za-z\s\.]/.test(val.trim())) return 'Name can only contain letters, spaces and dots';
+  return null;
+}
+function frontendValidateEmail(val) {
+  if (!val || !val.trim()) return 'Email is required';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val.trim())) return 'Enter a valid email (must contain @)';
+  return null;
+}
+function frontendValidatePassword(val) {
+  if (!val) return 'Password is required';
+  if (val.length < 8) return 'Password must be at least 8 characters';
+  if (!/[A-Z]/.test(val)) return 'Add at least one uppercase letter (A-Z)';
+  if (!/[a-z]/.test(val)) return 'Add at least one lowercase letter (a-z)';
+  if (!/\d/.test(val))    return 'Add at least one number (0-9)';
+  if (!/[!@#$%^&*()\-_=+\[\]{}|;:'",.<>?\/`~\\]/.test(val)) return 'Add at least one special character';
+  return null;
+}
+function frontendValidateContact(val) {
+  if (!val || !val.trim()) return null;
+  const d = val.replace(/\D/g,'');
+  if (d.length !== 10) return 'Contact number must be exactly 10 digits';
+  return null;
+}
+
+/* ── domain chips ── */
 let selectedDomains = [];
+function buildDomainChips() {
+  const domains = ['AI/ML','IoT','Cybersecurity','Web Development',
+                   'Data Science','Blockchain','Cloud Computing','Mobile Development'];
+  const el = document.getElementById('domain-chips');
+  if (!el) return;
+  el.innerHTML = domains.map(d => `
+    <label class="domain-chip" onclick="toggleDomain(this,'${d}')">
+      <input type="checkbox" value="${d}"/> ${d}
+    </label>`).join('');
+}
 function toggleDomain(el, d) {
   if (selectedDomains.includes(d)) {
     selectedDomains = selectedDomains.filter(x=>x!==d);
     el.classList.remove('selected');
   } else {
-    if (selectedDomains.length >= 3) { toast('Max 3 domains','error'); return; }
+    if (selectedDomains.length >= 3) { toast('Maximum 3 domains allowed','error'); return; }
     selectedDomains.push(d);
     el.classList.add('selected');
   }
+  const errEl = document.getElementById('err-domains');
+  if (errEl) errEl.textContent = '';
 }
-
 function onRoleChange() {
   const role = document.getElementById('reg-role').value;
-  document.getElementById('guide-domains').style.display    = role==='Guide'             ? '' : 'none';
-  document.getElementById('examiner-fields').style.display  = role==='External Examiner' ? '' : 'none';
+  document.getElementById('guide-domains').style.display   = role==='Guide'             ? '' : 'none';
+  document.getElementById('examiner-fields').style.display = role==='External Examiner' ? '' : 'none';
+  if (role==='Guide') buildDomainChips();
+}
+
+function togglePwd(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type='text';     btn.textContent='🙈'; }
+  else                          { inp.type='password'; btn.textContent='👁'; }
 }
 
 async function doLogin() {
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  if (!email || !password) { toast('Fill all fields','error'); return; }
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+
+  let valid = true;
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    setFieldError('login-email', 'Enter a valid email address');
+    valid = false;
+  } else clearFieldError('login-email');
+
+  if (!pass) {
+    setFieldError('login-password', 'Password is required');
+    valid = false;
+  } else clearFieldError('login-password');
+
+  if (!valid) return;
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
   try {
-    const data = await api('POST','/auth/login',{email,password});
-    token = data.token;
+    const data = await api('POST', '/auth/login', { email, password: pass });
+    token       = data.token;
     currentUser = data.user;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(currentUser));
     showApp();
-    toast(`Welcome, ${currentUser.name}!`);
-  } catch(e) { toast(e.message,'error'); }
+    toast(`Welcome back, ${currentUser.name}! 👋`);
+  } catch(e) {
+    toast(e.message, 'error');
+    // Show inline error
+    if (e.message.toLowerCase().includes('password'))
+      setFieldError('login-password', e.message);
+    else if (e.message.toLowerCase().includes('email') || e.message.toLowerCase().includes('account'))
+      setFieldError('login-email', e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 Sign In';
+  }
 }
 
 async function doRegister() {
-  const name  = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass  = document.getElementById('reg-password').value;
-  const role  = document.getElementById('reg-role').value;
-  if (!name||!email||!pass||!role) { toast('Fill all fields','error'); return; }
+  const name    = document.getElementById('reg-name').value.trim();
+  const email   = document.getElementById('reg-email').value.trim();
+  const contact = document.getElementById('reg-contact').value.trim();
+  const pass    = document.getElementById('reg-password').value;
+  const role    = document.getElementById('reg-role').value;
 
-  const body = {name,email,password:pass,role};
-  if (role==='Guide') {
-    if (selectedDomains.length<2) { toast('Select at least 2 domains','error'); return; }
-    body.domains = selectedDomains;
+  // Clear all errors
+  ['reg-name','reg-email','reg-contact','reg-password','reg-role'].forEach(clearFieldError);
+
+  let valid = true;
+
+  const nameErr = frontendValidateName(name);
+  if (nameErr) { setFieldError('reg-name', nameErr); valid=false; }
+
+  const emailErr = frontendValidateEmail(email);
+  if (emailErr) { setFieldError('reg-email', emailErr); valid=false; }
+
+  const contactErr = frontendValidateContact(contact);
+  if (contactErr) { setFieldError('reg-contact', contactErr); valid=false; }
+
+  const passErr = frontendValidatePassword(pass);
+  if (passErr) { setFieldError('reg-password', passErr); valid=false; }
+
+  if (!role) { setFieldError('reg-role', 'Please select a role'); valid=false; }
+
+  if (role === 'Guide') {
+    if (selectedDomains.length < 2 || selectedDomains.length > 3) {
+      setFieldError('domains', 'Select 2 or 3 domains'); valid=false;
+    }
   }
-  if (role==='External Examiner') {
+  if (role === 'External Examiner') {
+    const sem  = document.getElementById('reg-sem').value;
+    const year = document.getElementById('reg-year').value;
+    if (!sem || !year) { toast('Please select semester and batch year', 'error'); valid=false; }
+  }
+
+  if (!valid) return;
+
+  const body = { name, email, password: pass, role };
+  if (contact) body.contact = contact.replace(/\D/g,'');
+  if (role === 'Guide') body.domains = selectedDomains;
+  if (role === 'External Examiner') {
     body.exam_sem  = parseInt(document.getElementById('reg-sem').value);
     body.exam_year = parseInt(document.getElementById('reg-year').value);
-    if (!body.exam_sem||!body.exam_year) { toast('Fill sem and year','error'); return; }
   }
+
   try {
-    await api('POST','/auth/register',body);
-    toast('Registered! Please log in.');
-    switchAuthTab('login');
-  } catch(e) { toast(e.message,'error'); }
+    const data = await api('POST', '/auth/register', body);
+    token       = data.token;
+    currentUser = data.user;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    closeAuthPanel();
+    showApp();
+    toast(`Account created! Welcome, ${currentUser.name} 🎉`);
+  } catch(e) {
+    toast(e.message, 'error');
+    if (e.message.toLowerCase().includes('email')) setFieldError('reg-email', e.message);
+  }
 }
 
 function logout() {
@@ -1745,24 +2083,45 @@ pages['add-project'] = () => {
 };
 
 async function submitProject() {
+  const title   = document.getElementById('np-title').value.trim();
+  const desc    = document.getElementById('np-desc').value.trim();
+  const domain  = document.getElementById('np-domain').value;
+  const members = document.getElementById('np-members').value.trim();
+
+  // clear errors
+  ['np-title','np-desc','np-domain','np-members'].forEach(id => {
+    const el = document.getElementById('err-' + id);
+    if(el) el.textContent = '';
+  });
+
+  let valid = true;
+  if (!title)   { const el=document.getElementById('err-np-title');   if(el)el.textContent='Project title is required';   valid=false; }
+  if (!desc)    { const el=document.getElementById('err-np-desc');    if(el)el.textContent='Description is required';      valid=false; }
+  if (!domain)  { const el=document.getElementById('err-np-domain');  if(el)el.textContent='Please select a domain';       valid=false; }
+  if (!members) { const el=document.getElementById('err-np-members'); if(el)el.textContent='Enter group member names';     valid=false; }
+  if (!valid) return;
+
   const body = {
-    title:        document.getElementById('np-title').value.trim(),
-    description:  document.getElementById('np-desc').value.trim(),
-    domain:       document.getElementById('np-domain').value,
+    title,
+    description:  desc,
+    domain,
     project_type: document.getElementById('np-type').value,
     sem:          parseInt(document.getElementById('np-sem').value),
     year:         parseInt(document.getElementById('np-year').value),
-    group_members:document.getElementById('np-members').value.trim(),
+    group_members:members,
     github_link:  document.getElementById('np-github').value.trim(),
     demo_link:    document.getElementById('np-demo').value.trim(),
     report_link:  document.getElementById('np-report').value.trim(),
     code_link:    document.getElementById('np-code').value.trim(),
   };
-  if (!body.title||!body.domain) { toast('Title and domain are required','error'); return; }
+
   try {
     const res = await api('POST','/projects',body);
-    toast(`Project submitted! Guide: ${res.guide_name}`);
+    toast(`Project submitted! 🎉 Guide assigned: ${res.guide_name}`);
     closeModal('add-project-modal');
+    // Clear form
+    ['np-title','np-desc','np-github','np-demo','np-report','np-code','np-members']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     navigate('my-projects');
   } catch(e) { toast(e.message,'error'); }
 }
@@ -1923,11 +2282,22 @@ pages.profile = async () => {
 ═══════════════════════════════════════ */
 pages.export = () => {
   setContent(`
-    <div class="card" style="max-width:400px">
-      <div class="card-title" style="margin-bottom:20px">Export Data</div>
+    <div class="card" style="max-width:480px">
+      <div class="card-title" style="margin-bottom:6px">📥 Export Data</div>
+      <p class="text-muted" style="margin-bottom:20px">Download formatted Excel sheets with complete information.</p>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <a href="/export/students" class="btn btn-outline">📥 Download Students Excel</a>
-        <a href="/export/projects" class="btn btn-outline">📥 Download Projects Excel</a>
+        <a href="/export/students" class="btn btn-outline">
+          📋 Students — Name, Email, Contact, Role
+        </a>
+        <a href="/export/projects" class="btn btn-outline">
+          📁 Projects — Full details, Guide, Marks, Links
+        </a>
+        <a href="/export/guides" class="btn btn-outline">
+          🧑‍🏫 Guides — Name, Email, Domains, Student Count
+        </a>
+        <a href="/export/all-users" class="btn btn-outline">
+          👥 All Users — Complete user list with all roles
+        </a>
       </div>
     </div>
   `);
@@ -1954,6 +2324,111 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(o=>{
   o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
 });
+</script>
+<!-- Google role picker (shown when new user signs in via Google) -->
+<div class="google-role-modal" id="google-role-modal">
+  <div class="google-role-box">
+    <h3>👋 Welcome! One more step</h3>
+    <p>You're signing in with Google for the first time. Please select your role to continue.</p>
+    <div class="form-group">
+      <label class="form-label">Your Role</label>
+      <select class="form-control" id="google-role-select">
+        <option value="Student">🎓 Student</option>
+        <option value="Guide">🧑‍🏫 Guide (Faculty)</option>
+        <option value="HoD">🏛️ HoD</option>
+        <option value="External Examiner">📝 External Examiner</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="confirmGoogleRole()">Continue →</button>
+  </div>
+</div>
+
+<!-- Firebase SDKs (loaded only when needed) -->
+<script>
+/* ═══════════════════════════════════════
+   FIREBASE SETUP
+═══════════════════════════════════════ */
+let firebaseApp = null;
+let firebaseAuth = null;
+let pendingGoogleCredential = null;
+
+async function loadFirebase() {
+  if (firebaseApp) return true;
+  try {
+    // Fetch config from backend
+    const res = await fetch('/auth/firebase-config');
+    const cfg = await res.json();
+    if (!cfg.apiKey) {
+      toast('Google Sign-In is not configured on this server', 'error');
+      return false;
+    }
+    // Dynamically load Firebase SDK
+    await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js');
+    firebaseApp  = firebase.initializeApp(cfg);
+    firebaseAuth = firebase.auth();
+    return true;
+  } catch(e) {
+    toast('Could not load Google Sign-In', 'error');
+    return false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function doGoogleLogin() {
+  const ok = await loadFirebase();
+  if (!ok) return;
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result   = await firebaseAuth.signInWithPopup(provider);
+    const idToken  = await result.user.getIdToken();
+    pendingGoogleCredential = { idToken, isNew: result.additionalUserInfo?.isNewUser };
+
+    if (result.additionalUserInfo?.isNewUser) {
+      // New user — ask for role first
+      document.getElementById('google-role-modal').classList.add('open');
+    } else {
+      await finishGoogleLogin('Student');
+    }
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      toast('Google Sign-In failed: ' + (e.message || e), 'error');
+    }
+  }
+}
+
+async function confirmGoogleRole() {
+  const role = document.getElementById('google-role-select').value;
+  document.getElementById('google-role-modal').classList.remove('open');
+  await finishGoogleLogin(role);
+}
+
+async function finishGoogleLogin(role) {
+  if (!pendingGoogleCredential) return;
+  try {
+    const data = await api('POST', '/auth/google', {
+      id_token: pendingGoogleCredential.idToken,
+      role,
+    });
+    pendingGoogleCredential = null;
+    token       = data.token;
+    currentUser = data.user;
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    showApp();
+    toast(`Welcome, ${currentUser.name}! 🎉`);
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
 </script>
 </body>
 </html>
