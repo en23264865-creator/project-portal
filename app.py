@@ -4,6 +4,30 @@ from flask_cors import CORS
 from config import Config
 from models import db, bcrypt, jwt
 
+
+def run_seed(app):
+    """Run seed directly here — avoids circular import from seed.py importing app."""
+    with app.app_context():
+        try:
+            from models import User
+            if User.query.count() > 0:
+                print('✅ Database already has data — skipping seed.')
+                return
+            print('🌱 Empty database — seeding now...')
+        except Exception as e:
+            print(f'⚠️  Could not check DB: {e}')
+            return
+
+        # Import seed data constants directly — no circular import
+        try:
+            import seed as seed_module
+            seed_module.seed()
+        except Exception as e:
+            print(f'❌ Seed failed: {e}')
+            import traceback
+            traceback.print_exc()
+
+
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.config.from_object(Config)
@@ -31,21 +55,16 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # Auto-seed if database is empty (handles Render free tier — no shell access)
-        try:
-            from models import User
-            if User.query.count() == 0:
-                print('🌱 Empty database detected — running auto-seed...')
-                from seed import seed
-                seed()
-        except Exception as e:
-            print(f'⚠️  Auto-seed skipped: {e}')
+
+    # Run seed AFTER app is fully built — outside app_context block
+    run_seed(app)
 
     @app.route('/')
     def index():
         return send_from_directory('templates', 'index.html')
 
     return app
+
 
 app = create_app()
 

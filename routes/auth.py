@@ -98,89 +98,102 @@ def init_firebase():
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.json or {}
+    try:
+        data = request.json or {}
 
-    err = validate_name(data.get('name', ''))
-    if err: return jsonify({'message': err}), 400
+        err = validate_name(data.get('name', ''))
+        if err: return jsonify({'message': err}), 400
 
-    err = validate_email(data.get('email', ''))
-    if err: return jsonify({'message': err}), 400
+        err = validate_email(data.get('email', ''))
+        if err: return jsonify({'message': err}), 400
 
-    err = validate_password(data.get('password', ''))
-    if err: return jsonify({'message': err}), 400
+        err = validate_password(data.get('password', ''))
+        if err: return jsonify({'message': err}), 400
 
-    err = validate_contact(data.get('contact', ''))
-    if err: return jsonify({'message': err}), 400
+        err = validate_contact(data.get('contact', ''))
+        if err: return jsonify({'message': err}), 400
 
-    role = data.get('role', '')
-    if role not in VALID_ROLES:
-        return jsonify({'message': 'Please select a valid role'}), 400
+        role = data.get('role', '')
+        if role not in VALID_ROLES:
+            return jsonify({'message': 'Please select a valid role'}), 400
 
-    if User.query.filter_by(email=data['email'].strip().lower()).first():
-        return jsonify({'message': 'This email is already registered'}), 400
+        if User.query.filter_by(email=data['email'].strip().lower()).first():
+            return jsonify({'message': 'This email is already registered'}), 400
 
-    domain1 = domain2 = domain3 = None
-    if role == 'Guide':
-        domains = data.get('domains', [])
-        if len(domains) < 2 or len(domains) > 3:
-            return jsonify({'message': 'Guide must select 2 or 3 domains'}), 400
-        domain1 = domains[0]
-        domain2 = domains[1]
-        domain3 = domains[2] if len(domains) == 3 else None
+        domain1 = domain2 = domain3 = None
+        if role == 'Guide':
+            domains = data.get('domains', [])
+            if len(domains) < 2 or len(domains) > 3:
+                return jsonify({'message': 'Guide must select 2 or 3 domains'}), 400
+            domain1 = domains[0]
+            domain2 = domains[1]
+            domain3 = domains[2] if len(domains) == 3 else None
 
-    exam_sem = exam_year = None
-    if role == 'External Examiner':
-        exam_sem  = data.get('exam_sem')
-        exam_year = data.get('exam_year')
-        if not exam_sem or not exam_year:
-            return jsonify({'message': 'Please select semester and batch year'}), 400
+        exam_sem = exam_year = None
+        if role == 'External Examiner':
+            exam_sem  = data.get('exam_sem')
+            exam_year = data.get('exam_year')
+            if not exam_sem or not exam_year:
+                return jsonify({'message': 'Please select semester and batch year'}), 400
 
-    contact_digits = re.sub(r'\D', '', data.get('contact', ''))
+        contact_digits = re.sub(r'\D', '', data.get('contact', '') or '')
 
-    user = User(
-        name      = data['name'].strip(),
-        email     = data['email'].strip().lower(),
-        password  = bcrypt.generate_password_hash(data['password']).decode('utf-8'),
-        role      = role,
-        contact   = contact_digits if contact_digits else None,
-        domain1   = domain1,
-        domain2   = domain2,
-        domain3   = domain3,
-        exam_sem  = exam_sem,
-        exam_year = exam_year,
-    )
-    db.session.add(user)
-    db.session.commit()
+        user = User(
+            name      = data['name'].strip(),
+            email     = data['email'].strip().lower(),
+            password  = bcrypt.generate_password_hash(data['password']).decode('utf-8'),
+            role      = role,
+            contact   = contact_digits if contact_digits else None,
+            domain1   = domain1,
+            domain2   = domain2,
+            domain3   = domain3,
+            exam_sem  = int(exam_sem)  if exam_sem  else None,
+            exam_year = int(exam_year) if exam_year else None,
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    token = create_access_token(identity=str(user.id))
-    return jsonify({
-        'message': 'Account created successfully!',
-        'token':   token,
-        'user':    user.to_dict(),
-    }), 201
+        token = create_access_token(identity=str(user.id))
+        return jsonify({
+            'message': 'Account created successfully!',
+            'token':   token,
+            'user':    user.to_dict(),
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        current_app.logger.error(f'Register error: {e}\n{traceback.format_exc()}')
+        return jsonify({'message': f'Registration failed: {str(e)}'}), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.json or {}
+    try:
+        data = request.json or {}
 
-    email    = data.get('email', '').strip().lower()
-    password = data.get('password', '')
+        email    = data.get('email', '').strip().lower()
+        password = data.get('password', '')
 
-    if not email:
-        return jsonify({'message': 'Email is required'}), 400
-    if not password:
-        return jsonify({'message': 'Password is required'}), 400
+        if not email:
+            return jsonify({'message': 'Email is required'}), 400
+        if not password:
+            return jsonify({'message': 'Password is required'}), 400
 
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({'message': 'No account found with this email address'}), 404
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({'message': 'No account found with this email address'}), 404
 
-    if not bcrypt.check_password_hash(user.password, password):
-        return jsonify({'message': 'Incorrect password. Please check and try again.'}), 401
+        if not bcrypt.check_password_hash(user.password, password):
+            return jsonify({'message': 'Incorrect password. Please check and try again.'}), 401
 
-    token = create_access_token(identity=str(user.id))
-    return jsonify({'token': token, 'user': user.to_dict()})
+        token = create_access_token(identity=str(user.id))
+        return jsonify({'token': token, 'user': user.to_dict()})
+
+    except Exception as e:
+        import traceback
+        current_app.logger.error(f'Login error: {e}\n{traceback.format_exc()}')
+        return jsonify({'message': f'Login failed: {str(e)}'}), 500
 
 
 @auth_bp.route('/google', methods=['POST'])
