@@ -424,9 +424,9 @@ if __name__ == '__main__':
 
         from models import User, Project
         if Project.query.count() == 0:
-                print("🌱 Running seed...")
-                from seed import seed
-                seed()
+            print("🌱 Running seed...")
+            from seed import seed
+            seed()
 
             print("================================")
             print("Users:", User.query.count())
