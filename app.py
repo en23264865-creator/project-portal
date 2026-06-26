@@ -6,7 +6,6 @@ from models import db, bcrypt, jwt
 
 
 def run_seed(app):
-    """Run seed directly here — avoids circular import from seed.py importing app."""
     with app.app_context():
         try:
             from models import User
@@ -14,12 +13,6 @@ def run_seed(app):
                 print('✅ Database already has data — skipping seed.')
                 return
             print('🌱 Empty database — seeding now...')
-        except Exception as e:
-            print(f'⚠️  Could not check DB: {e}')
-            return
-
-        # Import seed data constants directly — no circular import
-        try:
             import seed as seed_module
             seed_module.seed()
         except Exception as e:
@@ -56,7 +49,6 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # Run seed AFTER app is fully built — outside app_context block
     run_seed(app)
 
     @app.route('/')
@@ -69,5 +61,5 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
