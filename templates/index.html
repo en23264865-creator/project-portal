@@ -1856,8 +1856,7 @@ pages.dashboard = async () => {
     const recent = projs.slice(0,6);
     document.getElementById('dash-recent').innerHTML =
       `<div class="projects-grid">${recent.map(projectCard).join('')}</div>`;
-  } catch(e) { setContent(`<p style="color:var(--red)">${e.message}</p>`); }
-};
+  } 
 
 /* ═══════════════════════════════════════
    PAGE: ALL PROJECTS
