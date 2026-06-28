@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090F;
+  --bg2: #0C0F1D;
+  --bg3: #111627;
+  --card: #141929;
+  --card2: #182038;
+  --indigo: #6366F1;
+  --indigo-light: #818CF8;
+  --cyan: #22D3EE;
+  --purple: #A78BFA;
+  --pink: #F472B6;
+  --green: #34D399;
+  --yellow: #FBBF24;
+  --orange: #FB923C;
+  --text: #F1F5F9;
+  --text2: #94A3B8;
+  --text3: #64748B;
+  --border: rgba(99,102,241,0.18);
+  --border2: rgba(255,255,255,0.06);
+  --glow: rgba(99,102,241,0.35);
+  --cyan-glow: rgba(34,211,238,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+#canvas-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.screen{position:relative;z-index:1;min-height:100vh;display:none;}
+.screen.active{display:flex;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.4);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--indigo);}
+
+/* ══════════════════════════════
+   LANDING
+══════════════════════════════ */
+#landing{flex-direction:column;align-items:center;justify-content:flex-start;padding:0;}
+
+.nav{width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 60px;background:rgba(7,9,15,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.35rem;letter-spacing:3px;display:flex;align-items:center;gap:10px;}
+.nav-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--indigo),var(--cyan));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.logo-text{background:linear-gradient(135deg,var(--indigo-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-actions{display:flex;gap:12px;align-items:center;}
+
+/* HERO */
+.hero{width:100%;max-width:1200px;margin:0 auto;padding:80px 60px 50px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:70px;align-items:center;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:20px;font-size:0.75rem;font-weight:600;color:var(--indigo-light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;}
+.hero-text h1{font-family:'Orbitron',monospace;font-size:clamp(1.9rem,3.5vw,3rem);font-weight:900;line-height:1.2;margin-bottom:20px;}
+.hero-text h1 .line1{color:var(--text);}
+.hero-text h1 .line2{background:linear-gradient(135deg,var(--indigo),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:1rem;color:var(--text2);line-height:1.75;margin-bottom:36px;max-width:480px;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;}
+
+.hero-visual{position:relative;display:flex;align-items:center;justify-content:center;}
+.vault-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:28px;width:100%;max-width:380px;box-shadow:0 0 80px rgba(99,102,241,0.12),0 20px 60px rgba(0,0,0,0.5);position:relative;overflow:hidden;animation:floatCard 6s ease-in-out infinite;}
+@keyframes floatCard{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.vault-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));}
+
+.vault-screen{background:var(--bg);border-radius:12px;padding:18px;margin-bottom:18px;min-height:150px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.vault-row{display:flex;align-items:center;gap:10px;}
+.vault-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--purple));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;}
+.vault-bar{height:6px;border-radius:3px;background:var(--bg3);}
+.vault-bar.active{background:linear-gradient(90deg,var(--indigo),var(--cyan));animation:barGrow 3s ease-in-out infinite alternate;}
+@keyframes barGrow{from{opacity:0.5}to{opacity:1}}
+.vault-mini-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+.vault-mini{background:var(--card2);border-radius:8px;padding:10px 12px;border:1px solid var(--border);}
+.vault-mini-num{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:var(--cyan);}
+.vault-mini-label{font-size:0.65rem;color:var(--text2);margin-top:2px;}
+.vault-footer{display:flex;align-items:center;gap:12px;}
+.vault-icon-box{width:40px;height:40px;background:linear-gradient(135deg,var(--indigo),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.vault-label-text h3{font-family:'Orbitron',monospace;font-size:0.8rem;letter-spacing:1px;}
+.vault-label-text p{font-size:0.7rem;color:var(--text2);margin-top:2px;}
+
+/* STATS STRIP */
+.stats-strip{width:100%;max-width:1200px;margin:0 auto 60px;padding:0 60px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px 18px;text-align:center;transition:all 0.3s;cursor:default;position:relative;overflow:hidden;}
+.stat-card:hover{border-color:var(--indigo);transform:translateY(-4px);box-shadow:0 12px 40px rgba(99,102,241,0.18);}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.3s;}
+.stat-card:hover::after{opacity:1;}
+.stat-card:nth-child(1)::after{background:linear-gradient(90deg,var(--indigo),var(--cyan));}
+.stat-card:nth-child(2)::after{background:linear-gradient(90deg,var(--cyan),var(--green));}
+.stat-card:nth-child(3)::after{background:linear-gradient(90deg,var(--purple),var(--pink));}
+.stat-card:nth-child(4)::after{background:linear-gradient(90deg,var(--yellow),var(--orange));}
+.stat-emoji{font-size:1.6rem;margin-bottom:8px;}
+.stat-number{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,var(--indigo-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-size:0.78rem;color:var(--text2);margin-top:4px;}
+
+/* ROLES */
+.roles-section{width:100%;max-width:1200px;margin:0 auto 70px;padding:0 60px;}
+.section-eyebrow{text-align:center;font-size:0.7rem;letter-spacing:4px;color:var(--indigo-light);text-transform:uppercase;margin-bottom:10px;font-weight:600;}
+.section-title{text-align:center;font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;margin-bottom:36px;}
+.roles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.role-card{background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 16px;text-align:center;cursor:pointer;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden;}
+.role-card:hover{transform:translateY(-8px) scale(1.02);border-color:var(--indigo);box-shadow:0 16px 50px rgba(99,102,241,0.2);}
+.role-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 18px 18px;transition:opacity 0.3s;opacity:0;}
+.role-card:hover::after{opacity:1;}
+.role-card[data-role="student"]::after{background:linear-gradient(90deg,var(--indigo),var(--cyan));}
+.role-card[data-role="teacher"]::after{background:linear-gradient(90deg,var(--green),var(--cyan));}
+
+.role-card[data-role="hod"]::after{background:linear-gradient(90deg,var(--yellow),var(--orange));}
+.role-card[data-role="examiner"]::after{background:linear-gradient(90deg,var(--pink),var(--purple));}
+.role-emoji{font-size:2.2rem;margin-bottom:12px;display:block;}
+.role-name{font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+.role-desc{font-size:0.73rem;color:var(--text2);line-height:1.55;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-weight:600;font-size:0.88rem;cursor:pointer;border:none;transition:all 0.25s;text-decoration:none;}
+.btn-primary{background:linear-gradient(135deg,var(--indigo),#4F46E5);color:white;box-shadow:0 4px 20px rgba(99,102,241,0.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,0.5);}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--indigo);background:rgba(99,102,241,0.08);}
+.btn-cyan{background:linear-gradient(135deg,#0891B2,var(--cyan));color:var(--bg);font-weight:700;}
+.btn-cyan:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(34,211,238,0.35);}
+.btn-sm{padding:8px 16px;font-size:0.8rem;}
+.btn-full{width:100%;justify-content:center;}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{background:rgba(255,255,255,0.09);color:var(--text);}
+
+/* ══════════════════════════════
+   AUTH SCREEN
+══════════════════════════════ */
+#auth{flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;min-height:100vh;}
+.auth-bg-decor{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.auth-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.07;}
+.auth-blob-1{width:400px;height:400px;background:var(--indigo);top:-100px;left:-100px;}
+.auth-blob-2{width:300px;height:300px;background:var(--cyan);bottom:-80px;right:-80px;}
+
+.auth-wrap{position:relative;z-index:2;width:100%;max-width:520px;}
+.auth-logo-block{text-align:center;margin-bottom:28px;}
+.auth-logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--indigo),var(--cyan));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 12px;}
+.auth-logo-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.5rem;background:linear-gradient(135deg,var(--indigo-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;}
+.auth-logo-sub{color:var(--text2);font-size:0.85rem;margin-top:4px;}
+
+.auth-container{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px;box-shadow:0 0 60px rgba(99,102,241,0.1),0 24px 70px rgba(0,0,0,0.5);position:relative;overflow:hidden;}
+.auth-container::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));}
+
+.role-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:22px;background:var(--bg2);padding:5px;border-radius:12px;}
+.role-tab{padding:8px 4px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:0.68rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;text-align:center;line-height:1.3;}
+.role-tab.active{background:var(--card2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.role-tab-emoji{display:block;font-size:1rem;margin-bottom:2px;}
+
+.mode-tabs{display:flex;gap:0;margin-bottom:26px;border-bottom:1px solid var(--border);}
+.mode-tab{flex:1;padding:11px;background:none;border:none;color:var(--text2);font-size:0.88rem;font-weight:600;cursor:pointer;position:relative;transition:color 0.2s;font-family:'Inter',sans-serif;}
+.mode-tab.active{color:var(--indigo-light);}
+.mode-tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan));border-radius:2px;}
+
+.form-grid{display:flex;flex-direction:column;gap:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:0.78rem;color:var(--text2);font-weight:500;}
+.form-input{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;transition:all 0.2s;outline:none;}
+.form-input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
+.form-input::placeholder{color:var(--text3);}
+select.form-input{cursor:pointer;}
+
+.auth-back{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:0.83rem;cursor:pointer;margin-bottom:20px;transition:color 0.2s;background:none;border:none;font-family:'Inter',sans-serif;}
+.auth-back:hover{color:var(--text);}
+
+/* ══════════════════════════════
+   DASHBOARD SCREEN
+══════════════════════════════ */
+#dashboard{flex-direction:row;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:250px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden;}
+.sidebar-top{padding:24px 18px 18px;border-bottom:1px solid var(--border);}
+.sidebar-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;letter-spacing:2px;display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+.sidebar-logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--indigo),var(--cyan));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;}
+.sidebar-user{display:flex;align-items:center;gap:12px;}
+.sidebar-avatar{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--indigo),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:white;flex-shrink:0;box-shadow:0 0 20px rgba(99,102,241,0.35);position:relative;}
+.online-dot{width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid var(--bg2);position:absolute;bottom:0;right:-1px;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0.4);}50%{box-shadow:0 0 0 5px rgba(52,211,153,0);}}
+.sidebar-user-info{flex:1;min-width:0;}
+.sidebar-name{font-weight:700;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-role-badge{display:inline-block;margin-top:3px;font-size:0.68rem;color:var(--indigo-light);background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:8px;font-weight:500;}
+
+.sidebar-nav{padding:10px 10px;flex:1;}
+.nav-section-label{font-size:0.65rem;color:var(--text3);font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:8px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s;margin-bottom:2px;color:var(--text2);font-size:0.85rem;font-weight:500;position:relative;border:1px solid transparent;}
+.nav-item:hover{background:var(--card);color:var(--text);}
+.nav-item.active{background:rgba(99,102,241,0.12);color:var(--indigo-light);border-color:rgba(99,102,241,0.18);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:linear-gradient(180deg,var(--indigo),var(--cyan));border-radius:0 3px 3px 0;}
+.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--indigo);color:white;font-size:0.62rem;padding:2px 7px;border-radius:10px;font-weight:700;}
+.nav-badge.red{background:var(--pink);}
+
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);}
+.add-project-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:linear-gradient(135deg,var(--indigo),#4F46E5);border:none;border-radius:12px;color:white;font-weight:600;font-size:0.82rem;cursor:pointer;transition:all 0.25s;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(99,102,241,0.25);}
+.add-project-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(99,102,241,0.4);}
+.logout-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-weight:500;font-size:0.8rem;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;margin-top:8px;}
+.logout-btn:hover{border-color:var(--pink);color:var(--pink);}
+
+/* MAIN CONTENT */
+.main-content{flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;}
+.content-header{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.85);backdrop-filter:blur(16px);position:sticky;top:0;z-index:50;}
+.content-header h2{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;letter-spacing:1px;}
+.header-right{display:flex;gap:10px;align-items:center;}
+.notif-btn{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;transition:all 0.2s;position:relative;}
+.notif-btn:hover{border-color:var(--indigo);}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--pink);border-radius:50%;border:2px solid var(--bg2);}
+
+.content-body{padding:28px 32px;flex:1;}
+
+/* VIEW SYSTEM */
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── WELCOME BANNER ── */
+.welcome-banner{border-radius:18px;padding:26px 30px;margin-bottom:24px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden;border:1px solid rgba(99,102,241,0.22);}
+.welcome-banner.student-banner{background:linear-gradient(135deg,rgba(99,102,241,0.14),rgba(34,211,238,0.06));}
+.welcome-banner.teacher-banner{background:linear-gradient(135deg,rgba(52,211,153,0.12),rgba(34,211,238,0.06));}
+.welcome-banner.hod-banner{background:linear-gradient(135deg,rgba(251,191,36,0.12),rgba(251,146,60,0.06));border-color:rgba(251,191,36,0.2);}
+.welcome-banner.examiner-banner{background:linear-gradient(135deg,rgba(244,114,182,0.12),rgba(167,139,250,0.06));border-color:rgba(244,114,182,0.2);}
+.welcome-avatar-lg{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;flex-shrink:0;}
+.welcome-text{flex:1;}
+.welcome-greeting{font-size:0.8rem;color:var(--text2);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;}
+.welcome-name{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;margin-bottom:6px;}
+.welcome-sub{font-size:0.83rem;color:var(--text2);}
+.welcome-decor{position:absolute;right:28px;top:50%;transform:translateY(-50%);font-size:3.5rem;opacity:0.15;}
+
+/* ── QUICK STATS ── */
+.quick-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.qstat{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:18px 16px;text-align:center;transition:all 0.25s;position:relative;overflow:hidden;}
+.qstat:hover{border-color:var(--indigo);transform:translateY(-3px);box-shadow:0 10px 30px rgba(99,102,241,0.15);}
+.qstat-icon{font-size:1.4rem;margin-bottom:6px;}
+.qstat-num{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;line-height:1;}
+.qstat-label{font-size:0.72rem;color:var(--text2);margin-top:5px;}
+.qstat-accent{position:absolute;bottom:0;left:0;right:0;height:2px;}
+
+/* ── FILTERS ── */
+.filters-section{margin-bottom:22px;}
+.filters-title{font-size:0.72rem;color:var(--text3);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.filter-chip{padding:6px 14px;border-radius:20px;background:var(--card);border:1px solid var(--border2);color:var(--text2);font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.filter-chip.active,.filter-chip:hover{background:rgba(99,102,241,0.12);border-color:var(--indigo);color:var(--indigo-light);}
+.filter-select{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:6px 14px;color:var(--text);font-size:0.78rem;cursor:pointer;outline:none;font-family:'Inter',sans-serif;transition:all 0.2s;}
+.filter-select:hover{border-color:var(--indigo);}
+.filter-divider{width:1px;height:20px;background:var(--border);margin:0 4px;}
+
+/* ── PROJECT GRID ── */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;}
+.project-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:20px;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);cursor:pointer;position:relative;overflow:hidden;}
+.project-card:hover{transform:translateY(-6px);border-color:var(--indigo);box-shadow:0 16px 50px rgba(99,102,241,0.18);}
+.project-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;}
+.project-card.mini::before{background:linear-gradient(90deg,var(--cyan),var(--indigo));}
+.project-card.major::before{background:linear-gradient(90deg,var(--purple),var(--pink));}
+.project-card.evaluated::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
+
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:0.68rem;font-weight:600;}
+.badge-mini{background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.2);}
+.badge-major{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+.badge-ongoing{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+.badge-completed{background:rgba(99,102,241,0.1);color:var(--indigo-light);border:1px solid rgba(99,102,241,0.2);}
+.badge-evaluated{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+.badge-pending{background:rgba(251,191,36,0.1);color:var(--yellow);border:1px solid rgba(251,191,36,0.2);}
+
+.project-title{font-weight:700;font-size:0.95rem;margin-bottom:7px;line-height:1.4;}
+.project-desc{font-size:0.78rem;color:var(--text2);line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.project-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.meta-tag{padding:3px 8px;border-radius:6px;background:var(--bg3);font-size:0.68rem;color:var(--text3);}
+.project-progress{margin-bottom:14px;}
+.progress-label{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text2);margin-bottom:5px;}
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan));transition:width 1s ease;}
+.project-footer{display:flex;align-items:center;justify-content:space-between;}
+.project-domain{font-size:0.72rem;color:var(--text3);}
+.project-actions{display:flex;gap:5px;}
+.icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:0.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.icon-btn:hover{border-color:var(--indigo);color:var(--indigo-light);background:rgba(99,102,241,0.1);}
+.icon-btn.liked{color:var(--pink);border-color:var(--pink);background:rgba(244,114,182,0.1);}
+
+/* ── HOD PANELS ── */
+.hod-overview{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+.overview-panel{background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:24px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden;}
+.overview-panel:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3);}
+.overview-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.overview-panel:nth-child(1)::before{background:linear-gradient(90deg,var(--indigo),var(--cyan));}
+.overview-panel:nth-child(2)::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
+.overview-panel:nth-child(3)::before{background:linear-gradient(90deg,var(--purple),var(--pink));}
+.panel-icon{font-size:2.2rem;margin-bottom:12px;display:block;}
+.panel-num{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:700;line-height:1;margin-bottom:6px;}
+.panel-label{font-size:0.85rem;color:var(--text2);}
+.panel-change{font-size:0.75rem;margin-top:6px;color:var(--green);}
+
+/* ── EXAMINER VIEW ── */
+.examiner-header-panel{background:var(--card);border:1px solid rgba(244,114,182,0.2);border-radius:18px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;}
+.examiner-header-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--pink),var(--purple));}
+.examiner-count{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.examiner-info h3{font-size:1rem;font-weight:700;margin-bottom:4px;}
+.examiner-info p{font-size:0.83rem;color:var(--text2);}
+
+/* ── PROFILE VIEW ── */
+.profile-hero{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px;display:flex;gap:24px;align-items:center;position:relative;overflow:hidden;}
+.profile-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));}
+.profile-avatar-lg{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--cyan));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:2rem;font-weight:700;color:white;flex-shrink:0;box-shadow:0 0 30px rgba(99,102,241,0.4);}
+.profile-info h2{font-size:1.3rem;font-weight:700;margin-bottom:4px;}
+.profile-info .dept{color:var(--text2);font-size:0.85rem;margin-bottom:10px;}
+.profile-tags{display:flex;gap:7px;flex-wrap:wrap;}
+.profile-tag{padding:4px 12px;border-radius:10px;font-size:0.72rem;font-weight:500;}
+.profile-actions{margin-left:auto;display:flex;flex-direction:column;gap:8px;}
+.profile-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.pstat{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:18px 14px;text-align:center;transition:all 0.2s;}
+.pstat:hover{border-color:var(--indigo);transform:translateY(-3px);}
+.pstat-num{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;}
+.pstat-label{font-size:0.72rem;color:var(--text2);margin-top:4px;}
+
+.profile-section{margin-bottom:24px;}
+.profile-section-title{font-family:'Orbitron',monospace;font-size:0.8rem;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.profile-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.project-list-item{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:9px;transition:all 0.2s;cursor:pointer;}
+.project-list-item:hover{border-color:var(--indigo);transform:translateX(4px);}
+.project-list-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.project-list-info{flex:1;}
+.project-list-info h4{font-size:0.88rem;font-weight:600;margin-bottom:2px;}
+.project-list-info p{font-size:0.72rem;color:var(--text2);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;position:relative;animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--purple));border-radius:24px 24px 0 0;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.modal-title{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;}
+.modal-close{width:30px;height:30px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.modal-close:hover{background:var(--card2);color:var(--text);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:13px 18px;display:flex;align-items:center;gap:11px;font-size:0.85rem;font-weight:500;z-index:300;transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 30px rgba(0,0,0,0.35);max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-icon{font-size:1.1rem;}
+
+/* ANIMATIONS */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeInUp 0.5s ease forwards;}
+.fade-in-1{animation-delay:0.05s;opacity:0;}
+.fade-in-2{animation-delay:0.15s;opacity:0;}
+.fade-in-3{animation-delay:0.25s;opacity:0;}
+.fade-in-4{animation-delay:0.35s;opacity:0;}
+
+/* TEXT UTILS */
+.text-cyan{color:var(--cyan);}
+.text-green{color:var(--green);}
+.text-purple{color:var(--purple);}
+.text-yellow{color:var(--yellow);}
+.text-pink{color:var(--pink);}
+.text-indigo{color:var(--indigo-light);}
+.text-dim{color:var(--text2);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2);}
+.empty-state-icon{font-size:3rem;margin-bottom:14px;opacity:0.5;}
+.empty-state h3{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--text);}
+.empty-state p{font-size:0.83rem;}
+
+/* SECTION DIVIDER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-heading{font-family:'Orbitron',monospace;font-size:0.85rem;font-weight:700;letter-spacing:1px;color:var(--text2);}
+
+/* ── TEACHER VIEW ── */
+.teacher-student-list{display:flex;flex-direction:column;gap:10px;}
+.student-row{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;}
+.student-row:hover{border-color:var(--indigo);transform:translateX(3px);}
+.student-av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--indigo),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:0.95rem;font-weight:700;color:white;flex-shrink:0;}
+.student-info{flex:1;}
+.student-info h4{font-size:0.88rem;font-weight:600;margin-bottom:2px;}
+.student-info p{font-size:0.72rem;color:var(--text2);}
+.student-status{font-size:0.72rem;padding:4px 10px;border-radius:8px;}
+</style>
+</head>
+<body>
+<canvas id="canvas-bg"></canvas>
+
+<!-- ════════════════════════ LANDING ════════════════════════ -->
+<div id="landing" class="screen active">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">🔒</div>
+      <span class="logo-text">ProjectVault</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-outline btn-sm" onclick="openAuth('login')">🔑 Login</button>
+      <button class="btn btn-primary btn-sm" onclick="openAuth('register')">✨ Register</button>
+    </div>
+  </nav>
+
+  <div class="hero fade-in fade-in-1">
+    <div class="hero-text">
+      <div class="hero-eyebrow">✦ Academic Project Repository</div>
+      <h1>
+        <span class="line1">The Central Hub for</span><br>
+        <span class="line2">Academic Projects</span>
+      </h1>
+      <p class="hero-sub">A unified portal where students showcase their work, guides mentor projects, teachers review progress, HODs oversee the department, and examiners evaluate with precision.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" onclick="openAuth('register')">🚀 Get Started Free</button>
+        <button class="btn btn-outline" onclick="openAuth('login')">🔑 Sign In</button>
+      </div>
+    </div>
+
+    <div class="hero-visual fade-in fade-in-2">
+      <div class="vault-card">
+        <div class="vault-screen">
+          <div class="vault-row">
+            <div class="vault-avatar">S</div>
+            <div style="flex:1">
+              <div class="vault-bar active" style="width:70%;margin-bottom:4px;"></div>
+              <div class="vault-bar" style="width:45%;"></div>
+            </div>
+          </div>
+          <div class="vault-row" style="margin-top:4px;">
+            <div class="vault-avatar" style="background:linear-gradient(135deg,var(--green),var(--cyan));">T</div>
+            <div style="flex:1">
+              <div class="vault-bar active" style="width:55%;margin-bottom:4px;background:linear-gradient(90deg,var(--green),var(--cyan));"></div>
+              <div class="vault-bar" style="width:35%;"></div>
+            </div>
+          </div>
+          <div class="vault-mini-cards">
+            <div class="vault-mini">
+              <div class="vault-mini-num">12</div>
+              <div class="vault-mini-label">Projects</div>
+            </div>
+            <div class="vault-mini">
+              <div class="vault-mini-num" style="color:var(--green);">8</div>
+              <div class="vault-mini-label">Evaluated</div>
+            </div>
+          </div>
+        </div>
+        <div class="vault-footer">
+          <div class="vault-icon-box">📁</div>
+          <div class="vault-label-text">
+            <h3>PROJECT VAULT</h3>
+            <p>Repository & Evaluation System</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-strip fade-in fade-in-3">
+    <div class="stat-card">
+      <div class="stat-emoji">🎓</div>
+      <div class="stat-number" data-target="1240">0</div>
+      <div class="stat-label">Students Enrolled</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">💡</div>
+      <div class="stat-number" data-target="530">0</div>
+      <div class="stat-label">Active Projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">👨‍🏫</div>
+      <div class="stat-number" data-target="84">0</div>
+      <div class="stat-label">Faculty Guides</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">🏆</div>
+      <div class="stat-number" data-target="320">0</div>
+      <div class="stat-label">Completed Projects</div>
+    </div>
+  </div>
+
+  <div class="roles-section fade-in fade-in-4">
+    <div class="section-eyebrow">Who Can Join</div>
+    <h2 class="section-title">Choose Your Role</h2>
+    <div class="roles-grid">
+      <div class="role-card" data-role="student" onclick="openAuthAs('student','register')">
+        <span class="role-emoji">🧑‍💻</span>
+        <div class="role-name text-cyan">Student</div>
+        <div class="role-desc">Submit projects, track progress, and get mentored throughout your academic journey.</div>
+      </div>
+      <div class="role-card" data-role="teacher" onclick="openAuthAs('teacher','register')">
+        <span class="role-emoji">👩‍🏫</span>
+        <div class="role-name text-green">Teacher / Guide</div>
+        <div class="role-desc">Review projects, provide feedback, mentor students as guide, and manage deliverables.</div>
+      </div>
+      <div class="role-desc">Mentor students end-to-end, from ideation to final submission.</div>
+      </div>
+      <div class="role-card" data-role="hod" onclick="openAuthAs('hod','register')">
+        <span class="role-emoji">🏛️</span>
+        <div class="role-name text-yellow">HOD</div>
+        <div class="role-desc">Oversee department projects, approve submissions and generate reports.</div>
+      </div>
+      <div class="role-card" data-role="examiner" onclick="openAuthAs('examiner','register')">
+        <span class="role-emoji">🔍</span>
+        <div class="role-name text-pink">Examiner</div>
+        <div class="role-desc">Evaluate assigned projects, grade work and record assessment results.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ AUTH ════════════════════════ -->
+<div id="auth" class="screen">
+  <div class="auth-bg-decor">
+    <div class="auth-blob auth-blob-1"></div>
+    <div class="auth-blob auth-blob-2"></div>
+  </div>
+  <div class="auth-wrap">
+    <div class="auth-logo-block">
+      <div class="auth-logo-icon">🔒</div>
+      <div class="auth-logo-title">ProjectVault</div>
+      <div class="auth-logo-sub">Academic Project Repository Portal</div>
+    </div>
+    <div class="auth-container">
+      <button class="auth-back" onclick="showScreen('landing')">← Back to Home</button>
+      <div class="role-tabs" id="role-tabs">
+        <button class="role-tab active" onclick="selectRole('student',this)"><span class="role-tab-emoji">🧑‍💻</span>Student</button>
+        <button class="role-tab" onclick="selectRole('teacher',this)"><span class="role-tab-emoji">👩‍🏫</span>Teacher</button>
+        <button class="role-tab" onclick="selectRole('hod',this)"><span class="role-tab-emoji">🏛️</span>HOD</button>
+        <button class="role-tab" onclick="selectRole('examiner',this)"><span class="role-tab-emoji">🔍</span>Examiner</button>
+      </div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="login-tab" onclick="setMode('login')">🔑 Login</button>
+        <button class="mode-tab" id="register-tab" onclick="setMode('register')">✨ Register</button>
+      </div>
+      <div id="login-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name or Email</label>
+            <input type="text" class="form-input" placeholder="Enter your name or email" id="login-name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" placeholder="••••••••">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doLogin()">🔑 Login to Dashboard</button>
+        </div>
+      </div>
+      <div id="register-form" style="display:none;">
+        <div class="form-grid" id="register-fields"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ DASHBOARD ════════════════════════ -->
+<div id="dashboard" class="screen">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🔒</div>
+        <span style="background:linear-gradient(135deg,var(--indigo-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Vault</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sb-avatar">A<div class="online-dot"></div></div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-name" id="sb-name">Alex Johnson</div>
+          <div class="sidebar-role-badge" id="sb-role">🧑‍💻 Student</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-nav" id="sidebar-nav">
+      <!-- Filled by JS per role -->
+    </div>
+    <div class="sidebar-footer">
+      <button class="add-project-btn" id="add-proj-btn" onclick="openModal()" style="display:none;">
+        <span style="font-size:1rem;">+</span> Add Project
+      </button>
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="content-header">
+      <h2 id="view-title">📁 My Projects</h2>
+      <div class="header-right">
+        <div class="notif-btn"><span>🔔</span><div class="notif-dot"></div></div>
+        <button class="btn btn-ghost btn-sm" id="header-action-btn" onclick="openModal()" style="display:none;">+ Add Project</button>
+      </div>
+    </div>
+    <div class="content-body">
+      <!-- STUDENT VIEWS -->
+      <div class="view active" id="view-projects">
+        <div class="welcome-banner student-banner">
+          <div class="welcome-avatar-lg" id="dash-avatar-lg" style="background:linear-gradient(135deg,var(--indigo),var(--purple));color:white;">A</div>
+          <div class="welcome-text">
+            <div class="welcome-greeting">Welcome back</div>
+            <div class="welcome-name" id="dash-name">Alex</div>
+            <div class="welcome-sub" id="dash-subtitle">You have 5 projects · 3 ongoing · 2 completed</div>
+          </div>
+          <div class="welcome-decor" id="dash-decor">🚀</div>
+        </div>
+        <div class="quick-stats" id="quick-stats-row">
+          <!-- Filled by JS -->
+        </div>
+        <div class="filters-section">
+          <div class="filters-title">Filter Projects</div>
+          <div class="filters-row">
+            <span class="filter-chip active" onclick="filterProjects('all',this)">All</span>
+            <span class="filter-chip" onclick="filterProjects('major',this)">🚀 Major</span>
+            <span class="filter-chip" onclick="filterProjects('mini',this)">🔬 Minor</span>
+            <div class="filter-divider"></div>
+            <span class="filter-chip" onclick="filterProjects('completed',this)">✅ Completed</span>
+            <span class="filter-chip" onclick="filterProjects('evaluated',this)">⭐ Evaluated</span>
+            <span class="filter-chip" onclick="filterProjects('ongoing',this)">🟢 Ongoing</span>
+            <div class="filter-divider"></div>
+            <select class="filter-select" onchange="filterByYear(this.value)">
+              <option value="all">All Years</option>
+              <option value="Year 1">Year 1</option>
+              <option value="Year 2">Year 2</option>
+              <option value="Year 3">Year 3</option>
+              <option value="Year 4">Year 4</option>
+            </select>
+            <select class="filter-select" onchange="filterByDomain(this.value)">
+              <option value="all">All Domains</option>
+              <option value="AI/ML">AI / ML</option>
+              <option value="IoT">IoT</option>
+              <option value="Blockchain">Blockchain</option>
+              <option value="AR/VR">AR / VR</option>
+              <option value="Web">Web Dev</option>
+              <option value="Data Science">Data Science</option>
+            </select>
+          </div>
+        </div>
+        <div class="projects-grid" id="projects-grid"></div>
+      </div>
+
+      <!-- PROFILE VIEW (Student) -->
+      <div class="view" id="view-profile">
+        <div class="profile-hero">
+          <div class="profile-avatar-lg" id="profile-avatar">A</div>
+          <div class="profile-info">
+            <h2 id="profile-name">Alex Johnson</h2>
+            <div class="dept" id="profile-dept">🏛️ Computer Engineering · Year 3</div>
+            <div class="profile-tags">
+              <span class="profile-tag" style="background:rgba(99,102,241,0.1);color:var(--indigo-light);">AI / ML</span>
+              <span class="profile-tag" style="background:rgba(34,211,238,0.1);color:var(--cyan);">IoT</span>
+              <span class="profile-tag" style="background:rgba(167,139,250,0.1);color:var(--purple);">Blockchain</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-outline btn-sm">✏️ Edit Profile</button>
+          </div>
+        </div>
+        <div class="profile-stats-row">
+          <div class="pstat"><div class="pstat-num text-indigo">5</div><div class="pstat-label">Total Projects</div></div>
+          <div class="pstat"><div class="pstat-num text-green">2</div><div class="pstat-label">Completed</div></div>
+          <div class="pstat"><div class="pstat-num text-cyan">3</div><div class="pstat-label">Ongoing</div></div>
+          <div class="pstat"><div class="pstat-num text-yellow">1</div><div class="pstat-label">Evaluated</div></div>
+        </div>
+        <div class="profile-section">
+          <div class="profile-section-title">📁 My Projects</div>
+          <div id="profile-projects-list"></div>
+        </div>
+      </div>
+
+      <!-- SAVED VIEW -->
+      <div class="view" id="view-saved">
+        <div class="section-header"><div class="section-heading">🔖 Saved Projects</div></div>
+        <div class="projects-grid" id="saved-grid"></div>
+      </div>
+
+      <!-- EXPLORE VIEW -->
+      <div class="view" id="view-explore">
+        <div class="section-header"><div class="section-heading">🔍 Explore All Projects</div></div>
+        <div class="filters-row" style="margin-bottom:20px;">
+          <span class="filter-chip active">All</span>
+          <span class="filter-chip">🚀 Major</span>
+          <span class="filter-chip">🔬 Minor</span>
+          <select class="filter-select"><option>All Domains</option><option>AI/ML</option><option>IoT</option><option>Web</option></select>
+        </div>
+        <div class="projects-grid" id="explore-grid"></div>
+      </div>
+
+      <!-- HOD VIEW -->
+      <div class="view" id="view-hod">
+        <div class="welcome-banner hod-banner">
+          <div class="welcome-avatar-lg" style="background:linear-gradient(135deg,var(--yellow),var(--orange));color:var(--bg);" id="hod-avatar-lg">H</div>
+          <div class="welcome-text">
+            <div class="welcome-greeting">Welcome back</div>
+            <div class="welcome-name" id="hod-name">Dr. Sharma</div>
+            <div class="welcome-sub">Department of Computer Engineering · HOD Dashboard</div>
+          </div>
+          <div class="welcome-decor">🏛️</div>
+        </div>
+        <div class="hod-overview">
+          <div class="overview-panel">
+            <span class="panel-icon">💡</span>
+            <div class="panel-num text-indigo">247</div>
+            <div class="panel-label">Total Projects Uploaded</div>
+            <div class="panel-change">↑ 12 this month</div>
+          </div>
+          <div class="overview-panel">
+            <span class="panel-icon">🎓</span>
+            <div class="panel-num text-green">862</div>
+            <div class="panel-label">Students Registered</div>
+            <div class="panel-change">↑ 34 this semester</div>
+          </div>
+          <div class="overview-panel">
+            <span class="panel-icon">🧭</span>
+            <div class="panel-num text-purple">38</div>
+            <div class="panel-label">Guides / Faculty</div>
+            <div class="panel-change">↑ 2 newly added</div>
+          </div>
+        </div>
+        <div class="section-header" style="margin-bottom:16px;"><div class="section-heading">📊 All Department Projects</div></div>
+        <div class="filters-row" style="margin-bottom:18px;">
+          <span class="filter-chip active">All</span>
+          <span class="filter-chip">🚀 Major</span>
+          <span class="filter-chip">🔬 Minor</span>
+          <span class="filter-chip">✅ Completed</span>
+          <span class="filter-chip">🟢 Ongoing</span>
+          <select class="filter-select"><option>All Years</option><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option></select>
+          <select class="filter-select"><option>All Domains</option><option>AI/ML</option><option>IoT</option></select>
+        </div>
+        <div class="projects-grid" id="hod-projects-grid"></div>
+      </div>
+
+      <!-- EXAMINER VIEW -->
+      <div class="view" id="view-examiner">
+        <div class="welcome-banner examiner-banner">
+          <div class="welcome-avatar-lg" style="background:linear-gradient(135deg,var(--pink),var(--purple));color:white;" id="examiner-avatar-lg">E</div>
+          <div class="welcome-text">
+            <div class="welcome-greeting">Welcome back</div>
+            <div class="welcome-name" id="examiner-name">Prof. Mehta</div>
+            <div class="welcome-sub">External Examiner · Evaluation Panel</div>
+          </div>
+          <div class="welcome-decor">🔍</div>
+        </div>
+        <div class="examiner-header-panel">
+          <div class="examiner-count">14</div>
+          <div class="examiner-info">
+            <h3>Projects to be Evaluated</h3>
+            <p>You have 14 pending evaluations assigned to you this semester.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-left:auto;">Start Evaluation</button>
+        </div>
+        <div class="filters-section" style="margin-bottom:18px;">
+          <div class="filters-title">Filter Assigned Projects</div>
+          <div class="filters-row">
+            <span class="filter-chip active">All Assigned</span>
+            <span class="filter-chip">⏳ Pending</span>
+            <span class="filter-chip">✅ Evaluated</span>
+            <span class="filter-chip">🚀 Major</span>
+            <span class="filter-chip">🔬 Minor</span>
+            <select class="filter-select"><option>All Domains</option><option>AI/ML</option><option>IoT</option></select>
+          </div>
+        </div>
+        <div class="projects-grid" id="examiner-grid"></div>
+      </div>
+
+      <!-- EXAMINER PROFILE VIEW -->
+      <div class="view" id="view-examiner-profile">
+        <div class="profile-hero">
+          <div class="profile-avatar-lg" id="examiner-profile-avatar" style="background:linear-gradient(135deg,var(--pink),var(--purple));">E</div>
+          <div class="profile-info">
+            <h2 id="examiner-profile-name">Prof. Mehta</h2>
+            <div class="dept">🔍 External Examiner · Mumbai University</div>
+            <div class="profile-tags">
+              <span class="profile-tag" style="background:rgba(244,114,182,0.1);color:var(--pink);">AI / ML</span>
+              <span class="profile-tag" style="background:rgba(167,139,250,0.1);color:var(--purple);">Data Science</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-outline btn-sm">✏️ Edit Profile</button>
+          </div>
+        </div>
+        <div class="profile-stats-row">
+          <div class="pstat"><div class="pstat-num text-pink">14</div><div class="pstat-label">To Evaluate</div></div>
+          <div class="pstat"><div class="pstat-num text-green">32</div><div class="pstat-label">Evaluated</div></div>
+          <div class="pstat"><div class="pstat-num text-indigo">46</div><div class="pstat-label">Total Assigned</div></div>
+          <div class="pstat"><div class="pstat-num text-yellow">4.8</div><div class="pstat-label">Avg Score Given</div></div>
+        </div>
+        <div class="profile-section">
+          <div class="profile-section-title">⏳ Projects to be Evaluated</div>
+          <div id="examiner-pending-list"></div>
+        </div>
+        <div class="profile-section" style="margin-top:24px;">
+          <div class="profile-section-title">✅ Previously Evaluated Projects</div>
+          <div id="examiner-done-list"></div>
+        </div>
+      </div>
+
+      <!-- TEACHER VIEW -->
+      <div class="view" id="view-teacher">
+        <div class="welcome-banner teacher-banner">
+          <div class="welcome-avatar-lg" style="background:linear-gradient(135deg,var(--green),var(--cyan));color:var(--bg);" id="teacher-avatar-lg">T</div>
+          <div class="welcome-text">
+            <div class="welcome-greeting">Welcome back</div>
+            <div class="welcome-name" id="teacher-name">Prof. Desai</div>
+            <div class="welcome-sub">Computer Engineering · Teacher &amp; Project Guide</div>
+          </div>
+          <div class="welcome-decor">👩‍🏫</div>
+        </div>
+        <div class="quick-stats" style="grid-template-columns:repeat(4,1fr);">
+          <div class="qstat"><div class="qstat-icon">👨‍🎓</div><div class="qstat-num text-green">18</div><div class="qstat-label">Students Mentoring</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--green),var(--cyan));"></div></div>
+          <div class="qstat"><div class="qstat-icon">📁</div><div class="qstat-num text-cyan">27</div><div class="qstat-label">Projects Assigned</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--cyan),var(--indigo));"></div></div>
+          <div class="qstat"><div class="qstat-icon">🧭</div><div class="qstat-num text-purple">15</div><div class="qstat-label">Guided Projects</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--purple),var(--pink));"></div></div>
+          <div class="qstat"><div class="qstat-icon">✅</div><div class="qstat-num text-indigo">11</div><div class="qstat-label">Approved</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--indigo),var(--purple));"></div></div>
+        </div>
+        <div class="section-header" style="margin:20px 0 14px;"><div class="section-heading">🧑‍💻 Mentored Students</div></div>
+        <div class="teacher-student-list" id="teacher-student-list"></div>
+      </div>
+
+      <!-- GUIDE VIEW (same as teacher) -->
+      <div class="view" id="view-guide">
+        <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(167,139,250,0.12),rgba(244,114,182,0.06));border-color:rgba(167,139,250,0.2);">
+          <div class="welcome-avatar-lg" style="background:linear-gradient(135deg,var(--purple),var(--pink));color:white;" id="guide-avatar-lg">G</div>
+          <div class="welcome-text">
+            <div class="welcome-greeting">Welcome back</div>
+            <div class="welcome-name" id="guide-name">Prof. Kulkarni</div>
+            <div class="welcome-sub">Project Guide · Department of Computer Engineering</div>
+          </div>
+          <div class="welcome-decor">🧭</div>
+        </div>
+        <div class="quick-stats" style="grid-template-columns:repeat(3,1fr);">
+          <div class="qstat"><div class="qstat-icon">🧑‍💻</div><div class="qstat-num text-purple">12</div><div class="qstat-label">Students Guided</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--purple),var(--pink));"></div></div>
+          <div class="qstat"><div class="qstat-icon">📁</div><div class="qstat-num text-pink">15</div><div class="qstat-label">Active Projects</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--pink),var(--purple));"></div></div>
+          <div class="qstat"><div class="qstat-icon">🏆</div><div class="qstat-num text-green">6</div><div class="qstat-label">Completed</div><div class="qstat-accent" style="background:linear-gradient(90deg,var(--green),var(--cyan));"></div></div>
+        </div>
+        <div class="section-header" style="margin:20px 0 14px;"><div class="section-heading">📁 Guided Projects</div></div>
+        <div class="projects-grid" id="guide-projects-grid"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🚀 Submit New Project</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Project Title</label>
+        <input type="text" class="form-input" placeholder="e.g. Smart Attendance System">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project Description</label>
+        <textarea class="form-input" rows="3" placeholder="Briefly describe your project..." style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-input"><option>Major Project</option><option>Minor Project</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Domain</label>
+          <select class="form-input"><option>AI/ML</option><option>IoT</option><option>Blockchain</option><option>Web Dev</option><option>AR/VR</option><option>Data Science</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Academic Year</label>
+          <select class="form-input"><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guide Name</label>
+          <input type="text" class="form-input" placeholder="Your project guide">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="submitProject()">🚀 Submit Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✅</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script>
+// ── STATE ──
+let currentRole = 'student';
+let currentUser = { name: 'Alex Johnson' };
+
+// ── CANVAS BG ──
+(function(){
+  const c = document.getElementById('canvas-bg');
+  const ctx = c.getContext('2d');
+  let w, h, particles = [];
+  function resize(){ w = c.width = window.innerWidth; h = c.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for(let i=0;i<70;i++) particles.push({ x:Math.random()*1920, y:Math.random()*1080, vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3, r:Math.random()*1.5+0.5, a:Math.random() });
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=w; if(p.x>w)p.x=0;
+      if(p.y<0)p.y=h; if(p.y>h)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(99,102,241,${p.a*0.5})`; ctx.fill();
+    });
+    // Connection lines
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){ ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(99,102,241,${(1-dist/120)*0.12})`; ctx.lineWidth=0.5; ctx.stroke(); }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── COUNTER ANIMATION ──
+function animateCounters(){
+  document.querySelectorAll('.stat-number[data-target]').forEach(el=>{
+    const target=+el.dataset.target, dur=1500;
+    let start=null;
+    function step(ts){ if(!start)start=ts; const p=Math.min((ts-start)/dur,1); el.textContent=Math.floor(p*target).toLocaleString(); if(p<1)requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  });
+}
+const obs = new IntersectionObserver(entries=>{ entries.forEach(e=>{ if(e.isIntersecting){ animateCounters(); obs.disconnect(); } }); });
+const strip = document.querySelector('.stats-strip');
+if(strip) obs.observe(strip);
+
+// ── SCREEN SWITCH ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── AUTH ──
+function openAuth(mode){ showScreen('auth'); setMode(mode); selectRoleByName(currentRole); }
+function openAuthAs(role, mode){ currentRole=role; openAuth(mode); }
+function selectRole(role, btn){
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  buildRegisterFields();
+}
+function selectRoleByName(role){
+  const tabs = document.querySelectorAll('.role-tab');
+  const roles = ['student','teacher','hod','examiner'];
+  const idx = roles.indexOf(role);
+  tabs.forEach(t=>t.classList.remove('active'));
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  buildRegisterFields();
+}
+function setMode(mode){
+  document.getElementById('login-form').style.display = mode==='login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = mode==='register' ? 'block' : 'none';
+  document.getElementById('login-tab').classList.toggle('active', mode==='login');
+  document.getElementById('register-tab').classList.toggle('active', mode==='register');
+}
+function buildRegisterFields(){
+  const f = document.getElementById('register-fields');
+  const extra = (currentRole==='student') ? `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Department</label>
+        <select class="form-input"><option>Computer Engineering</option><option>IT</option><option>Electronics</option><option>Mechanical</option></select></div>
+      <div class="form-group"><label class="form-label">Year</label>
+        <select class="form-input"><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option></select></div>
+    </div>` : (currentRole==='examiner') ? `
+    <div class="form-group"><label class="form-label">Institution / University</label>
+      <input type="text" class="form-input" placeholder="e.g. Mumbai University"></div>
+    <div class="form-group"><label class="form-label">Specialisation</label>
+      <select class="form-input"><option>AI/ML</option><option>IoT</option><option>Data Science</option><option>Software Engineering</option></select></div>` : `
+    <div class="form-group"><label class="form-label">Department</label>
+      <select class="form-input"><option>Computer Engineering</option><option>IT</option><option>Electronics</option><option>Mechanical</option></select></div>`;
+  f.innerHTML = `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="reg-name" placeholder="Your full name"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="you@college.edu"></div>
+    </div>
+    ${extra}
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" placeholder="Min 8 characters"></div>
+      <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" placeholder="Repeat password"></div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:4px;" onclick="doRegister()">✨ Create Account</button>`;
+}
+
+function doLogin(){
+  const name = document.getElementById('login-name').value.trim();
+  currentUser.name = name || defaultNameForRole(currentRole);
+  setupDashboard(); showScreen('dashboard');
+  showToast('✅', `Welcome back, ${currentUser.name.split(' ')[0]}!`);
+}
+function doRegister(){
+  const nameEl = document.getElementById('reg-name');
+  currentUser.name = (nameEl && nameEl.value.trim()) || defaultNameForRole(currentRole);
+  setupDashboard(); showScreen('dashboard');
+  showToast('🎉', `Account created! Welcome, ${currentUser.name.split(' ')[0]}!`);
+}
+function doLogout(){ showScreen('landing'); showToast('👋', 'Logged out successfully.'); }
+
+function defaultNameForRole(r){
+  const d={student:'Alex Johnson',teacher:'Prof. Desai',hod:'Dr. Sharma',examiner:'Prof. Mehta'};
+  return d[r]||'User';
+}
+
+// ── SIDEBAR CONFIG ──
+const sidebarConfig = {
+  student: [
+    { label:'Navigation', items:[
+      { icon:'📁', text:'My Projects', view:'projects', badge:'5' },
+      { icon:'🔖', text:'Saved', view:'saved' },
+      { icon:'🔍', text:'Explore', view:'explore' },
+      { icon:'👤', text:'Profile', view:'profile' },
+    ]}
+  ],
+  teacher: [
+    { label:'Navigation', items:[
+      { icon:'👩‍🏫', text:'Dashboard', view:'teacher' },
+      { icon:'📁', text:'Projects', view:'guide', badge:'15' },
+      { icon:'👤', text:'Profile', view:'profile' },
+    ]}
+  ],
+
+  hod: [
+    { label:'Navigation', items:[
+      { icon:'🏛️', text:'Overview', view:'hod' },
+      { icon:'👤', text:'Profile', view:'profile' },
+    ]}
+  ],
+  examiner: [
+    { label:'Navigation', items:[
+      { icon:'🔍', text:'Evaluations', view:'examiner', badge:'14', badgeClass:'red' },
+      { icon:'👤', text:'Profile', view:'examiner-profile' },
+    ]}
+  ],
+};
+
+const roleEmoji = { student:'🧑‍💻', teacher:'👩‍🏫', hod:'🏛️', examiner:'🔍' };
+const roleName  = { student:'Student', teacher:'Teacher / Guide', hod:'HOD', examiner:'Examiner' };
+
+function setupDashboard(){
+  const fn = currentUser.name;
+  const ini = fn.charAt(0).toUpperCase();
+
+  // Sidebar
+  document.getElementById('sb-avatar').childNodes[0].textContent = ini;
+  document.getElementById('sb-name').textContent = fn;
+  document.getElementById('sb-role').textContent = `${roleEmoji[currentRole]} ${roleName[currentRole]}`;
+
+  // Build nav
+  const nav = document.getElementById('sidebar-nav');
+  const config = sidebarConfig[currentRole] || sidebarConfig.student;
+  nav.innerHTML = config.map(g=>`
+    <div class="nav-section-label">${g.label}</div>
+    ${g.items.map((item,i)=>`
+      <div class="nav-item ${i===0?'active':''}" onclick="showView('${item.view}',this)">
+        <span class="nav-icon">${item.icon}</span>${item.text}
+        ${item.badge?`<span class="nav-badge ${item.badgeClass||''}">${item.badge}</span>`:''}
+      </div>`).join('')}
+  `).join('');
+
+  // Show/hide add project btn
+  const showAdd = currentRole==='student' || currentRole==='teacher';
+  document.getElementById('add-proj-btn').style.display = showAdd?'flex':'none';
+  document.getElementById('header-action-btn').style.display = showAdd?'flex':'none';
+
+  // Show correct initial view
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const firstView = { student:'projects', teacher:'teacher', hod:'hod', examiner:'examiner' };
+  document.getElementById('view-'+firstView[currentRole]).classList.add('active');
+
+  // Content header title
+  const titles = { student:'📁 My Projects', teacher:'👩‍🏫 Teacher Dashboard', hod:'🏛️ HOD Overview', examiner:'🔍 Evaluation Panel' };
+  document.getElementById('view-title').textContent = titles[currentRole];
+
+  // Welcome banners
+  const first = fn.split(' ')[0];
+  // Student
+  if(document.getElementById('dash-name')){ document.getElementById('dash-name').textContent = first; }
+  document.getElementById('dash-avatar-lg').textContent = ini;
+  // HOD
+  if(document.getElementById('hod-name')) document.getElementById('hod-name').textContent = fn;
+  document.getElementById('hod-avatar-lg').textContent = ini;
+  // Teacher
+  if(document.getElementById('teacher-name')) document.getElementById('teacher-name').textContent = fn;
+  document.getElementById('teacher-avatar-lg').textContent = ini;
+  // Guide (same as teacher role)
+  if(document.getElementById('guide-name')) document.getElementById('guide-name').textContent = fn;
+  if(document.getElementById('guide-avatar-lg')) document.getElementById('guide-avatar-lg').textContent = ini;
+  // Examiner
+  if(document.getElementById('examiner-name')) document.getElementById('examiner-name').textContent = fn;
+  document.getElementById('examiner-avatar-lg').textContent = ini;
+  document.getElementById('examiner-profile-avatar').textContent = ini;
+  document.getElementById('examiner-profile-name').textContent = fn;
+
+  // Profile
+  document.getElementById('profile-avatar').textContent = ini;
+  document.getElementById('profile-name').textContent = fn;
+
+  // Quick stats
+  buildQuickStats();
+  renderProjects();
+  renderSaved();
+  renderExplore();
+  renderHodProjects();
+  renderExaminerProjects();
+  renderGuideProjects();
+  renderTeacherStudents();
+  renderProfileList();
+  renderExaminerProfileLists();
+
+  // Student subtitle
+  const total=projects.length, ongoing=projects.filter(p=>p.status==='ongoing').length, completed=projects.filter(p=>p.status==='completed').length;
+  if(document.getElementById('dash-subtitle')) document.getElementById('dash-subtitle').textContent = `You have ${total} projects · ${ongoing} ongoing · ${completed} completed`;
+}
+
+function buildQuickStats(){
+  const row = document.getElementById('quick-stats-row');
+  if(!row) return;
+  const stats = [
+    {icon:'📁',num:projects.length,label:'Total Projects',color:'var(--indigo-light)',accent:'linear-gradient(90deg,var(--indigo),var(--cyan))'},
+    {icon:'🚀',num:projects.filter(p=>p.type==='major').length,label:'Major Projects',color:'var(--purple)',accent:'linear-gradient(90deg,var(--purple),var(--pink))'},
+    {icon:'🟢',num:projects.filter(p=>p.status==='ongoing').length,label:'Ongoing',color:'var(--green)',accent:'linear-gradient(90deg,var(--green),var(--cyan))'},
+    {icon:'✅',num:projects.filter(p=>p.status==='completed').length,label:'Completed',color:'var(--cyan)',accent:'linear-gradient(90deg,var(--cyan),var(--indigo))'},
+  ];
+  row.innerHTML = stats.map(s=>`
+    <div class="qstat">
+      <div class="qstat-icon">${s.icon}</div>
+      <div class="qstat-num" style="color:${s.color}">${s.num}</div>
+      <div class="qstat-label">${s.label}</div>
+      <div class="qstat-accent" style="background:${s.accent}"></div>
+    </div>`).join('');
+}
+
+// ── DATA ──
+const projects = [
+  {id:1,title:'AI-Powered Health Monitoring Wearable',desc:'Wearable device with ML models to monitor vitals in real-time and alert emergency contacts.',type:'major',status:'ongoing',domain:'IoT + AI',year:'Year 3',progress:65,liked:false},
+  {id:2,title:'Smart Attendance using Face Recognition',desc:'Automated attendance system using OpenCV and deep learning for accurate face detection.',type:'mini',status:'completed',domain:'AI/ML',year:'Year 2',progress:100,liked:true},
+  {id:3,title:'Blockchain Certificate Verification',desc:'Decentralized system to issue and verify academic certificates on Ethereum blockchain.',type:'mini',status:'completed',domain:'Blockchain',year:'Year 2',progress:100,liked:false},
+  {id:4,title:'NLP Chatbot for College FAQ',desc:'Intelligent chatbot using transformer models to answer student queries about college services.',type:'mini',status:'ongoing',domain:'AI/ML',year:'Year 3',progress:40,liked:false},
+  {id:5,title:'AR-based Lab Manual',desc:'Augmented reality app that overlays step-by-step instructions on physical lab equipment.',type:'major',status:'ongoing',domain:'AR/VR',year:'Year 3',progress:20,liked:true},
+];
+const exploreProjects = [
+  {id:6,title:'Real-time Stock Predictor with LSTM',desc:'Deep learning model to predict stock movements using historical data and market sentiment.',type:'major',status:'completed',domain:'Data Science',year:'Year 4',progress:100,liked:false},
+  {id:7,title:'Plagiarism Detector using NLP',desc:'NLP-based tool to detect content similarity across academic papers and submissions.',type:'mini',status:'completed',domain:'AI/ML',year:'Year 3',progress:100,liked:true},
+  {id:8,title:'Smart Irrigation System',desc:'IoT system automating irrigation based on soil moisture sensors and weather data.',type:'major',status:'ongoing',domain:'IoT',year:'Year 3',progress:55,liked:false},
+];
+const examinerProjects = [
+  {id:101,title:'Deep Learning Object Detection',desc:'Real-time object detection for surveillance using YOLOv8.',type:'major',status:'pending',domain:'AI/ML',year:'Year 4',progress:100,liked:false},
+  {id:102,title:'Decentralized Voting System',desc:'Secure voting via Ethereum smart contracts.',type:'major',status:'pending',domain:'Blockchain',year:'Year 4',progress:100,liked:false},
+  {id:103,title:'Smart Home Automation',desc:'IoT platform for home automation with voice control.',type:'mini',status:'evaluated',domain:'IoT',year:'Year 3',progress:100,liked:false},
+  {id:104,title:'E-Health Prediction System',desc:'ML pipeline for predicting chronic disease risks from patient data.',type:'major',status:'evaluated',domain:'Data Science',year:'Year 4',progress:100,liked:false},
+];
+
+// ── RENDER ──
+let activeYearFilter='all', activeDomainFilter='all';
+
+function projectCardHTML(p, showEvaluate=false){
+  const typeBadge = p.type==='mini' ? `<span class="badge badge-mini">🔬 Minor</span>` : `<span class="badge badge-major">🚀 Major</span>`;
+  const statusBadge = p.status==='completed' ? `<span class="badge badge-completed">✅ Completed</span>` :
+    p.status==='evaluated' ? `<span class="badge badge-evaluated">⭐ Evaluated</span>` :
+    p.status==='pending' ? `<span class="badge badge-pending">⏳ Pending</span>` :
+    `<span class="badge badge-ongoing">🟢 Ongoing</span>`;
+  return `<div class="project-card ${p.type}" data-id="${p.id}">
+    <div class="badge-row">${typeBadge}${statusBadge}</div>
+    <div class="project-title">${p.title}</div>
+    <div class="project-desc">${p.desc}</div>
+    <div class="project-meta"><span class="meta-tag">📅 ${p.year}</span><span class="meta-tag">🏷️ ${p.domain}</span></div>
+    ${p.status==='ongoing'?`<div class="project-progress"><div class="progress-label"><span>Progress</span><span>${p.progress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%"></div></div></div>`:''}
+    <div class="project-footer">
+      <span class="project-domain">🌐 ${p.domain}</span>
+      <div class="project-actions">
+        ${showEvaluate?`<button class="icon-btn" title="Evaluate" style="width:auto;padding:0 10px;font-size:0.72rem;color:var(--pink);border-color:rgba(244,114,182,0.3);">Evaluate</button>`:`
+        <button class="icon-btn ${p.liked?'liked':''}" onclick="toggleLike(${p.id},this)" title="Like">❤️</button>
+        <button class="icon-btn" title="View">👁</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderProjects(filter='all'){
+  const grid = document.getElementById('projects-grid');
+  if(!grid) return;
+  let filtered = projects.filter(p=>{
+    if(filter==='mini') return p.type==='mini';
+    if(filter==='major') return p.type==='major';
+    if(filter==='ongoing') return p.status==='ongoing';
+    if(filter==='completed') return p.status==='completed';
+    if(filter==='evaluated') return p.status==='evaluated';
+    return true;
+  }).filter(p=> (activeYearFilter==='all'||p.year===activeYearFilter) && (activeDomainFilter==='all'||p.domain.includes(activeDomainFilter)));
+  grid.innerHTML = filtered.length ? filtered.map(p=>projectCardHTML(p)).join('') : '<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No projects found</h3><p>Try adjusting the filters.</p></div>';
+}
+function renderSaved(){ const g=document.getElementById('saved-grid'); if(!g)return; const saved=[...projects,...exploreProjects].filter(p=>p.liked); g.innerHTML = saved.length ? saved.map(p=>projectCardHTML(p)).join('') : '<div class="empty-state"><div class="empty-state-icon">🔖</div><h3>No saved projects</h3><p>Like or bookmark projects to save them here.</p></div>'; }
+function renderExplore(){ const g=document.getElementById('explore-grid'); if(!g)return; g.innerHTML=[...exploreProjects,...projects].map(p=>projectCardHTML(p)).join(''); }
+function renderHodProjects(){ const g=document.getElementById('hod-projects-grid'); if(!g)return; g.innerHTML=[...projects,...exploreProjects].map(p=>projectCardHTML(p)).join(''); }
+function renderGuideProjects(){ const g=document.getElementById('guide-projects-grid'); if(!g)return; g.innerHTML=projects.map(p=>projectCardHTML(p)).join(''); }
+function renderExaminerProjects(){ const g=document.getElementById('examiner-grid'); if(!g)return; g.innerHTML=examinerProjects.map(p=>projectCardHTML(p,true)).join(''); }
+function renderProfileList(){
+  const el=document.getElementById('profile-projects-list'); if(!el)return;
+  el.innerHTML=projects.map(p=>`<div class="project-list-item">
+    <div class="project-list-icon" style="background:${p.type==='major'?'rgba(167,139,250,0.12)':'rgba(34,211,238,0.12)'};">${p.type==='major'?'🚀':'🔬'}</div>
+    <div class="project-list-info"><h4>${p.title}</h4><p>${p.domain} · ${p.year} · ${p.status}</p></div>
+    <span class="badge ${p.status==='completed'?'badge-completed':p.status==='evaluated'?'badge-evaluated':'badge-ongoing'}">${p.status}</span>
+  </div>`).join('');
+}
+function renderExaminerProfileLists(){
+  const pending=document.getElementById('examiner-pending-list');
+  const done=document.getElementById('examiner-done-list');
+  const pList=examinerProjects.filter(p=>p.status==='pending');
+  const dList=examinerProjects.filter(p=>p.status==='evaluated');
+  if(pending) pending.innerHTML=pList.map(p=>`<div class="project-list-item"><div class="project-list-icon" style="background:rgba(251,191,36,0.1);">⏳</div><div class="project-list-info"><h4>${p.title}</h4><p>${p.domain} · ${p.year}</p></div><button class="btn btn-sm btn-primary" style="font-size:0.72rem;padding:6px 14px;">Evaluate</button></div>`).join('') || '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">✅</div><h3>All done!</h3></div>';
+  if(done) done.innerHTML=dList.map(p=>`<div class="project-list-item"><div class="project-list-icon" style="background:rgba(52,211,153,0.1);">✅</div><div class="project-list-info"><h4>${p.title}</h4><p>${p.domain} · ${p.year}</p></div><span class="badge badge-evaluated">⭐ Evaluated</span></div>`).join('') || '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">📭</div><h3>No evaluated projects yet</h3></div>';
+}
+function renderTeacherStudents(){
+  const el=document.getElementById('teacher-student-list'); if(!el)return;
+  const students=[{n:'Rahul Patil',proj:'AI Health Wearable',status:'ongoing'},{n:'Priya Sharma',proj:'Blockchain Voting',status:'completed'},{n:'Arjun Mehta',proj:'Smart Irrigation',status:'ongoing'},{n:'Sneha Kulkarni',proj:'NLP Chatbot',status:'ongoing'}];
+  el.innerHTML=students.map(s=>`<div class="student-row"><div class="student-av">${s.n[0]}</div><div class="student-info"><h4>${s.n}</h4><p>${s.proj}</p></div><span class="student-status ${s.status==='completed'?'badge badge-completed':'badge badge-ongoing'}">${s.status}</span></div>`).join('');
+}
+
+// ── FILTERS ──
+function filterProjects(filter, chip){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  renderProjects(filter);
+}
+function filterByYear(val){ activeYearFilter=val; renderProjects(); }
+function filterByDomain(val){ activeDomainFilter=val; renderProjects(); }
+
+function toggleLike(id, btn){
+  const p=[...projects,...exploreProjects].find(x=>x.id===id);
+  if(p){ p.liked=!p.liked; btn.classList.toggle('liked',p.liked); showToast(p.liked?'❤️':'🤍',p.liked?'Added to saved!':'Removed from saved.'); }
+}
+
+// ── VIEW SWITCH ──
+function showView(view, navItem){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  navItem.classList.add('active');
+  const titles={ projects:'📁 My Projects', profile:'👤 My Profile', saved:'🔖 Saved Projects', explore:'🔍 Explore', hod:'🏛️ HOD Overview', teacher:'👩‍🏫 Teacher Dashboard', guide:'📁 Guided Projects', examiner:'🔍 Evaluation Panel', 'examiner-profile':'👤 My Profile' };
+  document.getElementById('view-title').textContent = titles[view] || '';
+}
+
+// ── MODAL ──
+function openModal(){ document.getElementById('modal-overlay').classList.add('show'); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+function closeModalOutside(e){ if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+function submitProject(){ closeModal(); showToast('🚀','Project submitted successfully!'); }
+
+// ── TOAST ──
+function showToast(icon, msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── INIT ──
+setMode('login');
+selectRoleByName('student');
+buildRegisterFields();
+</script>
+</body>
+</html>
