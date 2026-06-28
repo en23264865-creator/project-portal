@@ -1832,8 +1832,7 @@ pages.dashboard = async () => {
         ${recent.slice(0,6).map(projectCard).join('')}
       </div>`;
     return;
-  } 
-  else {
+  }
     const s = await api('GET','/projects/stats');
     setContent(`
       <div class="stats-grid">
@@ -1872,8 +1871,7 @@ pages.dashboard = async () => {
     const recent = projs.slice(0,6);
     document.getElementById('dash-recent').innerHTML =
       `<div class="projects-grid">${recent.map(projectCard).join('')}</div>`;
-  };
-};
+  } 
 
 /* ═══════════════════════════════════════
    PAGE: ALL PROJECTS
