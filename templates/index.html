@@ -336,12 +336,26 @@ nav.sidebar-nav { flex:1; padding:12px 0; overflow-y:auto; }
   display:none; position:fixed; inset:0;
   background:rgba(10,10,26,.7); backdrop-filter:blur(6px);
   z-index:200; align-items:center; justify-content:center; padding:20px;
+  overflow-y:auto;
 }
 .auth-overlay.open { display:flex; }
+.auth-title{
+    text-align:center;
+    font-size:2rem;
+    font-weight:800;
+    background:linear-gradient(135deg,#6366F1,#22D3EE);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    letter-spacing:4px;
+    margin-bottom:20px;
+}
 
 .auth-panel {
   background:#fff; border-radius:20px;
-  width:100%; max-width:460px;
+  width:100%; 
+  max-width:500px;
+  max-height:90vh;
+  overflow-y:auto;
   box-shadow:0 32px 80px rgba(0,0,0,.4);
   overflow:hidden; animation:panelIn .35s cubic-bezier(.4,0,.2,1);
 }
@@ -364,6 +378,16 @@ nav.sidebar-nav { flex:1; padding:12px 0; overflow-y:auto; }
 .auth-panel-sub  { font-size:.78rem; color:rgba(255,255,255,.5); }
 
 .auth-panel-body { padding:28px 32px 32px; }
+.auth-panel::-webkit-scrollbar {
+    width:6px;
+}
+.auth-panel::-webkit-scrollbar-thumb {
+    background:#6366F1;
+    border-radius:10px;
+}
+.auth-panel::-webkit-scrollbar-track {
+    background:#f1f1f1;
+}
 
 .auth-tabs {
   display:flex; gap:4px;
@@ -468,7 +492,7 @@ nav.sidebar-nav { flex:1; padding:12px 0; overflow-y:auto; }
    PROJECT CARDS (list view)
 ═══════════════════════════════════════ */
 .projects-grid {
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:20px;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:20px;
 }
 .project-card {
   background:#141929;
@@ -477,6 +501,8 @@ nav.sidebar-nav { flex:1; padding:12px 0; overflow-y:auto; }
   box-shadow:0 10px 35px rgba(0,0,0,0.4);
   cursor:pointer; transition:all .2s;
   position:relative; overflow:hidden;
+  padding:24px;
+  min-height:280px;
 }
 .project-card::before {
   content:''; position:absolute; top:0; left:0; right:0; height:3px;
@@ -484,7 +510,7 @@ nav.sidebar-nav { flex:1; padding:12px 0; overflow-y:auto; }
 }
 .project-card:hover { transform:translateY(-8px);border-color:#6366F1;box-shadow:0 20px 50px rgba(99,102,241,0.2); }
 
-.project-card-title { font-size:.95rem; font-weight:700; margin-bottom:6px; color:var(--ink); }
+.project-card-title {  font-size:1.05rem; font-weight:700; line-height:1.5; margin-bottom:10px; color:var(--ink); }
 .project-card-desc  { font-size:.78rem; color:var(--ink-3); margin-bottom:12px; line-height:1.5;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .project-card-meta  { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
@@ -1011,6 +1037,9 @@ tr:hover td { background:var(--surface); }
 ═══════════════════════════════════════ -->
 <div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuthPanel()">
   <div class="auth-panel">
+    <div class="auth-title">
+      PROJECT FOLDER
+    </div>
     <div class="auth-panel-header">
       <button class="auth-panel-close" onclick="closeAuthPanel()">✕</button>
       <div class="auth-panel-logo">Project <span>Portal</span></div>
